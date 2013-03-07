@@ -20,5 +20,12 @@ h1 {
 		<li>Host issue: it can be Google app-engine or some ua VDS</li>
 		<li>Domain issue: need in investigation the free-of-charge way of getting org.ua or smt zones</li>
 	</ol>
+	<h2>Installation</h2>
+	<ol>
+		<li>Be sure u have java installed, and JAVA_HOME env variable is set properly</li>
+		<li>Install Tomcat 7 and running localhost on default port 8080. You have to have manager-gui and manager-script roles specified in CATAINA_HOME/config/tomcat-users.xml</li>
+		<li>to run build you have to have maven installed (e.g. external or eclipse+m2plugin) in M2_HOME/conf/setting.xml (or in USER_HOME/.m2/conf/settings.xml)</li>
+		<li>Finally you can deploy app by calling "mvn package tomcat7:deploy" command switch</li>
+	</ol>
 </body>
 </html>
