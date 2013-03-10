@@ -1,6 +1,4 @@
-var map = null;
-
-function initialize() {
+$(window).load(function() {
 	var kiev = new google.maps.LatLng(50.4501, 30.5234);
 
 	var mapOptions = {
@@ -13,14 +11,9 @@ function initialize() {
 	    mapOptions);
 
 	google.maps.event.addListener(map, 'click', function(event) {
-    	placeMarker(event.latLng);
-    	// Send new point to home  
+ 		var marker = new google.maps.Marker({
+		    position: event.latLng,
+		    map: map
+		});
   	});	
-}
-
-function placeMarker(location) {
-  var marker = new google.maps.Marker({
-      position: location,
-      map: map
-  });  
-}
+});

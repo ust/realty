@@ -8,11 +8,17 @@
 	<name>realty Maven Webapp</name>
 	<url>http://maven.apache.org</url>
 	<dependencies>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>3.0.1</version>
+			<scope>provided</scope>
+		</dependency>
 
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
+			<groupId>javax.ws.rs</groupId>
+			<artifactId>jsr311-api</artifactId>
+			<version>1.1.1</version>
 		</dependency>
 
 		<dependency>
@@ -22,11 +28,16 @@
 		</dependency>
 
 		<dependency>
-			<groupId>javax.ws.rs</groupId>
-			<artifactId>jsr311-api</artifactId>
-			<version>1.1.1</version>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.2.2</version>
 		</dependency>
 
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+		</dependency>
 
 	</dependencies>
 
@@ -43,21 +54,21 @@
 					</configuration>
 				</plugin>
 				<plugin>
-			        <groupId>org.apache.maven.plugins</groupId>
-			        <artifactId>maven-surefire-plugin</artifactId>
-			        <version>2.13</version>
-			        <configuration>
-			    	    <skipTests>true</skipTests>
-			        </configuration>
-			    </plugin>				
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.13</version>
+					<configuration>
+						<skipTests>true</skipTests>
+					</configuration>
+				</plugin>
 				<plugin>
-				    <groupId>org.codehaus.mojo</groupId>
-				    <artifactId>tomcat-maven-plugin</artifactId>
-				    <configuration>
-				        <url>http://localhost:8080/manager/text</url>
-				        <server>tomcat</server>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>tomcat-maven-plugin</artifactId>
+					<configuration>
+						<url>http://localhost:8080/manager/text</url>
+						<server>tomcat</server>
 						<path>/realty</path>
-				    </configuration>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.tomcat.maven</groupId>
