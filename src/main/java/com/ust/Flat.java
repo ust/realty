@@ -28,7 +28,7 @@ public class Flat extends HttpServlet {
 					+ Math.random()));
 		}
 
-		resp.setContentType("text/plain");
+		resp.setContentType("application/json");
 		resp.setCharacterEncoding("UTF-8");
 		resp.getWriter().write(new Gson().toJson(coords));
 	}
