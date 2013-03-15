@@ -10,10 +10,20 @@ $(window).load(function() {
 	map = new google.maps.Map(document.getElementById("map"),
 	    mapOptions);
 
-	google.maps.event.addListener(map, 'click', function(event) {
- 		var marker = new google.maps.Marker({
-		    position: event.latLng,
-		    map: map
+	$.get('json/all', function (resp) {
+		$.each(resp, function (index, item) {
+			placeMarker(new google.maps.LatLng(item.lat, item.lang));
 		});
+	});
+
+	google.maps.event.addListener(map, 'click', function(event) {
+ 		placeMarker(event.latLng);
   	});	
 });
+
+function placeMarker (loc) {
+	var marker = new google.maps.Marker({
+	    position: loc,
+	    map: map
+	});
+}
