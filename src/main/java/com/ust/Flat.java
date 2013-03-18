@@ -24,13 +24,25 @@ public class Flat extends HttpServlet {
 			throws ServletException, IOException {
 		List<Coords> coords = new ArrayList<Coords>();
 		for (int i = 0; i < 5; i++) {
-			coords.add(new Coords(latitude + Math.random(), langitude
-					+ Math.random()));
+			coords.add(new Coords(latitude + Math.random()/10, langitude
+					+ Math.random()/10));
 		}
 
 		resp.setContentType("application/json");
 		resp.setCharacterEncoding("UTF-8");
+		// TODO replace with Jackson
 		resp.getWriter().write(new Gson().toJson(coords));
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+		//DB db = new Mongo().getDB("test");
+		//Jongo jongo = new Jongo(db);
+		//MongoCollection coords = jongo.getCollection("test");
+		Coords c = new Coords(Double.valueOf((String) req.getAttribute("lat")), 
+			Double.valueOf((String) req.getAttribute("lang")));
+		//coords.save(c);
 	}
 }
 
