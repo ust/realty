@@ -17,8 +17,14 @@ $(window).load(function() {
 	});
 
 	google.maps.event.addListener(map, 'click', function(event) {
- 		placeMarker(event.latLng);
-  	});	
+ 		$.post('json/add', {
+	 			lat: event.latLng.lat(),
+	 			lng: event.latLng.lng()
+	 		}, function () {
+	 			placeMarker(event.latLng);
+	 		}
+	 	);
+	 });
 });
 
 function placeMarker (loc) {
