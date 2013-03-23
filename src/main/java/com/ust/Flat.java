@@ -7,7 +7,6 @@ import java.util.List;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,7 +17,7 @@ import org.jongo.MongoCollection;
 import com.google.gson.Gson;
 import com.mongodb.Mongo;
 
-@WebServlet("/json/*")
+//@WebServlet("/json/*")
 public class Flat extends HttpServlet {
 	private static final long serialVersionUID = -7989378549244222826L;
 
@@ -46,25 +45,16 @@ public class Flat extends HttpServlet {
     @Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
-        // List<Coords> coords = new ArrayList<Coords>();
-        // for (int i = 0; i < 5; i++) {
-        // coords.add(new Coords(LAT + Math.random()/10, LNG
-        // + Math.random()/10));
-        // }
-
         List<Coords> coords = new ArrayList<Coords>();
         System.out.println("count loaded " + collection.count());
-        int i = 0;
         for (Coords c : collection.find().as(Coords.class))
         {
-            System.out.println("loaded " + i++);
             coords.add(c);
         }
 
 		resp.setContentType("application/json");
 		resp.setCharacterEncoding("UTF-8");
-		// TODO replace with Jackson
-        resp.getWriter().write(new Gson().toJson(coords));
+		resp.getWriter().write(new Gson().toJson(coords));
 	}
 
 	@Override
@@ -73,9 +63,6 @@ public class Flat extends HttpServlet {
 
         Double lat = Double.valueOf((String) req.getParameter("lat"));
         Double lng = Double.valueOf((String) req.getParameter("lng"));
-
-        System.out.println("recive new point [lat: " + lat + "lang: " + lng
-                + "]");
 
         Coords c = new Coords(lat, lng);
         collection.save(c);
