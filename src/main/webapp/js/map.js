@@ -7,8 +7,7 @@ $(window).load(function() {
 	  mapTypeId: google.maps.MapTypeId.ROADMAP
 	};
 	
-	map = new google.maps.Map(document.getElementById("map"),
-	    mapOptions);
+	map = new google.maps.Map($('#map_canvas')[0], mapOptions);
 
 	$.get('json/all', function (resp) {
 		$.each(resp, function (index, item) {

@@ -3,4 +3,4 @@ set "MONGO_HOME=D:\java\mongodb-win32-i386-2.4.0"
 
 start "mongod" %MONGO_HOME%\bin\mongod.exe --dbpath D:\java\data\mongo
 start "mongo" %MONGO_HOME%\bin\mongo.exe
-start "tomcat" %TOMCAT_HOME%\bin\startup.but
+start "tomcat" %TOMCAT_HOME%\bin\startup.bat

@@ -22,10 +22,10 @@
 		</dependency>
 
 		<dependency>
-		    <groupId>org.jongo</groupId>
-		    <artifactId>jongo</artifactId>
-		    <version>0.3</version>
-		</dependency>           
+			<groupId>org.jongo</groupId>
+			<artifactId>jongo</artifactId>
+			<version>0.3</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
@@ -56,17 +56,17 @@
 				</plugin>
 				<plugin>
 					<artifactId>maven-clean-plugin</artifactId>
-				    <version>2.4.1</version>
-				    <configuration>
-				        <filesets>
-				            <fileset>
-				                <directory>src/main/webapp/WEB-INF/classes</directory>
-				            </fileset>
-				            <fileset>
-				                <directory>src/main/webapp/WEB-INF/lib</directory>
-				            </fileset>
-				        </filesets>
-				    </configuration>
+					<version>2.4.1</version>
+					<configuration>
+						<filesets>
+							<fileset>
+								<directory>src/main/webapp/WEB-INF/classes</directory>
+							</fileset>
+							<fileset>
+								<directory>src/main/webapp/WEB-INF/lib</directory>
+							</fileset>
+						</filesets>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -81,18 +81,16 @@
 					<artifactId>tomcat-maven-plugin</artifactId>
 					<configuration>
 						<url>http://localhost:8080/manager/text</url>
-						<server>tomcat</server>
-						<path>/realty</path>
+						<server>tomcat</server>										
 					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.tomcat.maven</groupId>
 					<artifactId>tomcat7-maven-plugin</artifactId>
-					<version>2.1</version>
+					<version>2.2</version>
 					<configuration>
 						<url>http://localhost:8080/manager/text</url>
-						<server>tomcat</server>
-						<path>/realty</path>
+						<server>tomcat</server>									
 					</configuration>
 				</plugin>
 			</plugins>
