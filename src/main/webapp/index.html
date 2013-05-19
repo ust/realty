@@ -1,33 +1,41 @@
 <!doctype html>
 <html>
 <head>
-	<title>Brokerdrop - list</title>
+	<meta charset="utf-8">
+	<title>Брокеры:/</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
-	<link rel="stylesheet" type="text/css" href="css/realty.css">
+	<link href="css/raplist.css" rel="stylesheet">
 
-	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCliN92WcVd2ODJ6rfpZhvh6F-UhtS74uM&sensor=false">
-    </script>	
-    <script src="js/jquery-1.9.1.js"></script>
-	<script src="js/map.js"></script>
+	<script src="js/jquery-1.9.1.js"></script>
+	<script src="js/numbers.js"></script>	
 </head>
-<body>
-	<header><div class="navbar">
-		<nav class="navbar-inner">
-			<a class="brand" href="#">Drop the Broker!</a><ul class="nav">
-			<li class="divider-vertical"></li>
-			<li><a href="#search">search</a></li>
-			<li class="divider-vertical"></li>
-			<li><a class="active" href="#map">map</a></li></ul>
-			<form class="navbar-form pull-right">
-  				<input type="text" class="span2">
-  				<button type="submit" class="btn">search</button>
-			</form>
-		</nav>
-	</div></header>
+<body><div class='container'>
+	<!-- header describes the help to user -->
+	<div class='hero-unit'>
+		<h1>Брокеры</h1>
+		<p>Они везедесущи, порой не сыскать пристанища с их отсутвием. Данный сервис поможет вам избежать лишних звонков. Введите номер и мы расскажем вам о его владельце всё что знаем. Ну а если негодяй ещё не попадался, вы всегда можете его нам отдать на сохраниение из чувства солидарности. Спасибо</p>
+	</div>
 	
-	<div id="map_canvas" class="container">Sorry, map does not loaded;(</div>
-
-	<footer class="navbar-fixed-bottom">All rights reserved & all brokers must be droped</footer>	
-</body>
+	<!-- search field for looking the brokers phone number -->
+	<p class='text-center'><form class="form-search">
+    	<label>Его номер: </label>
+		<div class="input-append">
+	    	<input type="text" class="span2 search-query" placeholder="099 999 99 99">
+	    	<button type="submit" class="btn">Искать</button>
+	  	</div>	  
+	</form></p>
+			
+	<!-- found result -->
+		<!-- before: Rap list/Grittings section -->
+		<!-- if found: Brokers card -->
+		<div class="alert alert-block">
+		  <button type="button" class="close" data-dismiss="alert">&times;</button>
+		  <h4>Warning!</h4>
+		  Best check yo self, you're not...
+		</div>
+		<!-- if not found: Congratulations messages! -->
+		<!-- on error: Sorry, smth bad happend.. -->
+	<!-- footer links to partner sites -->
+</div></body>
 </html>
