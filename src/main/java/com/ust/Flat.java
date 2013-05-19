@@ -19,10 +19,10 @@ import com.mongodb.Mongo;
 
 //@WebServlet("/json/*")
 public class Flat extends HttpServlet {
+	private static final long serialVersionUID = -7989378549244222826L;
+
 	private static final String DB = "test";
 	private static final String COLLECTION = "test";
-
-	private static final long serialVersionUID = -7989378549244222826L;
 
 	public static final double LAT = 50.4501;
 	public static final double LNG = 30.5234;

@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
 	<meta charset="utf-8">
@@ -13,29 +13,31 @@
 <body><div class='container'>
 	<!-- header describes the help to user -->
 	<div class='hero-unit'>
-		<h1>Брокеры</h1>
+		<h1>Брокеры</h1><br>
+		<!-- carousel: With funny reasons to use the service -->
 		<p>Они везедесущи, порой не сыскать пристанища с их отсутвием. Данный сервис поможет вам избежать лишних звонков. Введите номер и мы расскажем вам о его владельце всё что знаем. Ну а если негодяй ещё не попадался, вы всегда можете его нам отдать на сохраниение из чувства солидарности. Спасибо</p>
-	</div>
 	
 	<!-- search field for looking the brokers phone number -->
-	<p class='text-center'><form class="form-search">
-    	<label>Его номер: </label>
-		<div class="input-append">
-	    	<input type="text" class="span2 search-query" placeholder="099 999 99 99">
-	    	<button type="submit" class="btn">Искать</button>
-	  	</div>	  
-	</form></p>
+		<div class="form-search">Его номер: <div class="input-append">
+		    <input type="text" class="span2 search-query" placeholder="+38 099 999 99 99">
+		    <button class="btn">Найти</button>
+		</div></div>
+	</div>
+	
 			
 	<!-- found result -->
+	<div class="well well-large">
 		<!-- before: Rap list/Grittings section -->
 		<!-- if found: Brokers card -->
 		<div class="alert alert-block">
 		  <button type="button" class="close" data-dismiss="alert">&times;</button>
-		  <h4>Warning!</h4>
-		  Best check yo self, you're not...
+		  <h4>Ууупс!</h4>
+		  Сервис временно недоступен:(
 		</div>
 		<!-- if not found: Congratulations messages! -->
 		<!-- on error: Sorry, smth bad happend.. -->
+	</div>
+
 	<!-- footer links to partner sites -->
 </div></body>
 </html>
