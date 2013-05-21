@@ -8,7 +8,24 @@
 	<p>a little bit nostalgy to mmg..</p>
 	<h2>Project description</h2>
 	<p>helps to find apartments without fucking brokers and earns a many from ad</p>
-	<h2>Here's the plan:</h2>
+	<p>v0.2: Little kind of help, actually it only will show is the phone number 
+		of real-estate brokers or not</p>
+	<h2>"EvoOne" Here's the new plan:</h2>
+	<ol>
+		<li>Domain investigation</li>
+		<li>Service implementation
+			<ol>
+				<li>Main page with ability to search number 
+					and requesting to add new</li>
+				<li>Server side solution stores brokers contact info
+					and services page requests</li>
+				<li>Parser for some donar-site-source, can be ran by hands</li>
+			</ol>
+		</li>
+		<li>Hosting investigation</li>
+		<li>Ad research</li>
+	</ol>
+	<h2><i>DEPRICATED</i> Here's the plan:</h2>
 	<ol>
 		<li>Design markups</li>
 		<li>Write simple page with list of available apartments</li>
