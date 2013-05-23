@@ -40,6 +40,7 @@
 		<li>Install Tomcat 7 and running localhost on default port 8080. You have to have manager-gui and manager-script roles specified in CATAINA_HOME/config/tomcat-users.xml</li>
 		<li>to run build you have to have maven installed (e.g. external or eclipse+m2plugin) in M2_HOME/conf/setting.xml (or in USER_HOME/.m2/conf/settings.xml)</li>
 		<li>Finally you can deploy app by calling "mvn package tomcat7:deploy" command switch. (after chenges tomcat7:redeploy)</li>
+		<li>If you want to omit copying resources to the CATALINA_HOME/webapps, you can copy realty.xml context file to the CATALINA_HOME/conf/Catalina/localhost. It specifies BASE_DIR/src/main/webapp as root context. Be sure you provide lib, classes and other resources in to it</li>
 	</ol>
 </body>
 </html>
