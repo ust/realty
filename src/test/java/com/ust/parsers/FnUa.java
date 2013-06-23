@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class FnUa {
@@ -42,7 +43,7 @@ public class FnUa {
 	@Test
 	public void grab() {
 		try {
-			Document doc = Jsoup.connect(kievAll).get();
+			Document doc = Jsoup.connect(favoriteFilter).get();
 			log.info(doc.title());
 
 		} catch (IOException e) {

@@ -25,8 +25,7 @@
 			</filter>
 			<appender-ref ref="STDOUT" />
 			<appender-ref ref="fn.ua" />
-		</logger>
-		>
+		</logger>		
 	</loggers>
 	<root>
 		<priority value="debug" />
