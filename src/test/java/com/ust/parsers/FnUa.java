@@ -4,28 +4,33 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class FnUa {
+
 	private static Logger log = LogManager.getLogger(FnUa.class);
 
-	@SuppressWarnings("unused")
-	private String kievAll = "http://fn.ua/listing.php?parent_id%5B%5D=1&parent_id%5B%5D=9&parent_id%5B%5D=51&parent_id%5B%5D=all";
-	private String favoriteFilter = "http://fn.ua/listing.php?parent_id%5B0%5D=1&parent_id%5B1%5D=9&parent_id%5B2%5D=51&parent_id%5B3%5D=all&pricemin=2500&pricemax=3500&pricecur=1&rooms=1";
+	private String kievAll;
+	private String favoriteFilter;
+
+	private static final int TIMEOUT = 1000 * 30;
 
 	@Before
 	public void init() {
 		log.trace("Loading properties...");
 		Properties props = new Properties();
-		String resource = "fn.ua";
+		String resource = "fn.ua.properties";
 		try {
 			InputStream in = FnUa.class.getResourceAsStream(resource);
 			if (in != null) {
@@ -37,19 +42,48 @@ public class FnUa {
 		}
 
 		kievAll = props.getProperty("kiev.all");
-		favoriteFilter = props.getProperty("favorite");
+		log.info("loaded property kiev.all is: " + kievAll);
+
+		favoriteFilter = props.getProperty("favorite.filter");
+		log.info("loaded property \"favorite\" is: " + favoriteFilter);
 	}
 
 	@Test
 	public void grab() {
 		try {
-			Document doc = Jsoup.connect(favoriteFilter).get();
-			log.info(doc.title());
+			log.trace("Connecting to fn.ua...");
+			Connection doc = Jsoup.connect(favoriteFilter).timeout(TIMEOUT);
+
+			scan(doc);
+			extract();
 
 		} catch (IOException e) {
 			String msg = "connecting to FN.UA failed";
 			log.error(msg, e);
 			fail(msg);
 		}
+	}
+
+	private void scan(Connection con) throws IOException {
+		Set<String> urls = new HashSet<String>();
+		Document doc = con.get();
+		// FIXME doing by page counter neither duplicate occurrence 
+		outer: for (int i = 1;; con.data("p", "" + ++i)) {
+			doc = con.get();
+			log.info("page: " + i);
+			
+			for (Element e : doc.select(".offer-photo a")) {
+				String url = e.attr("href");
+				if (!urls.add(url)) {
+					break outer;
+				}
+				log.info("find url: " + url);
+			}
+		}		
+	}
+
+	private void extract() {
+		// parse separate items
+
 	}
 }
