@@ -1,4 +1,4 @@
-package com.ust;
+package com.ust.servlets;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -15,7 +15,7 @@ import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 
 import com.google.gson.Gson;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 public class Raplist extends HttpServlet {
 	private static final long serialVersionUID = -5200533547601694317L;
@@ -29,7 +29,7 @@ public class Raplist extends HttpServlet {
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
 		try {
-			brokers = new Jongo(new Mongo().getDB(DB))
+			brokers = new Jongo(new MongoClient().getDB(DB))
 					.getCollection(COLLECTION);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();

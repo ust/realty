@@ -1,4 +1,4 @@
-package com.ust;
+package com.ust.servlets;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -15,7 +15,7 @@ import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 
 import com.google.gson.Gson;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 //@WebServlet("/json/*")
 public class Flat extends HttpServlet {
@@ -33,7 +33,7 @@ public class Flat extends HttpServlet {
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
 		try {
-			markers = new Jongo(new Mongo().getDB(DB))
+			markers = new Jongo(new MongoClient().getDB(DB))
 					.getCollection(COLLECTION);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
