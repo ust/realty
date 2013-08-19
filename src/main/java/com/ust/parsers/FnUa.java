@@ -190,8 +190,6 @@ public class FnUa {
 		// load unprocessed items
 		for (Iterator<Advert> i = service.iterator(forceUpdate); i.hasNext();) {
 			Advert ad = i.next();
-
-			// save to appropriate file
 			if (parse(ad)) {
 				ad.setProcessed(true);
 				service.save(ad);
@@ -203,7 +201,6 @@ public class FnUa {
 		// parse separate items
 		Document doc = null;
 		try {
-			// TODO
 			String url = uriBuilder
 					.setPath("view.php")
 					.setQuery(
@@ -236,22 +233,22 @@ public class FnUa {
 				"fn_rubrics_menu/backendTest.php", ad.get_id(),
 				doc.select("#show-phone").attr("data-hash"));
 		if (numbers != null && numbers.size() > 0) {
-			ad.setNumbers(new ArrayList<String>());
+			ad.setPhones(new ArrayList<String>());
 			for (Iterator<Element> i = doc.select("p.ad-contacts b span")
 					.iterator(); i.hasNext();) {
 				Element e = i.next();
-				ad.getNumbers().add(
+				ad.getPhones().add(
 						e.parent().ownText().replaceAll("\\D", "")
 								+ numbers.get("aphone"
-										+ (ad.getNumbers().size() + 1)));
+										+ (ad.getPhones().size() + 1)));
 				log.trace("number : "
-						+ ad.getNumbers().get(ad.getNumbers().size() - 1));
+						+ ad.getPhones().get(ad.getPhones().size() - 1));
 			}
 		}
 
 		log.debug("parsed id " + ad.get_id() + " price " + ad.getPrice()
 				+ " phones: "
-				+ (ad.getNumbers() != null ? ad.getNumbers().size() : 0)
+				+ (ad.getPhones() != null ? ad.getPhones().size() : 0)
 				+ " images count "
 				+ (ad.getImgs() != null ? ad.getImgs().size() : 0));
 		return true;
@@ -261,7 +258,6 @@ public class FnUa {
 			final String hash) {
 		Map<String, String> numbers = null;
 		try {
-			// FIXME setup request
 			URI uri = new URIBuilder()
 					.setScheme("http")
 					.setHost(host)

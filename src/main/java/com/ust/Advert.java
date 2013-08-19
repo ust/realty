@@ -25,7 +25,7 @@ public class Advert {
 	private String description;
 	private String price;
 	private List<String> imgs;
-	private List<String> numbers;
+	private List<String> phones;
 	private String date;
 	private boolean processed;
 
@@ -77,12 +77,12 @@ public class Advert {
 		this.imgs = imgs;
 	}
 
-	public List<String> getNumbers() {
-		return numbers;
+	public List<String> getPhones() {
+		return phones;
 	}
 
-	public void setNumbers(List<String> numbers) {
-		this.numbers = numbers;
+	public void setPhones(List<String> phones) {
+		this.phones = phones;
 	}
 
 	public String getDate() {
