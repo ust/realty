@@ -14,11 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -30,8 +27,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jongo.Jongo;
-import org.jongo.MongoCollection;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -42,8 +37,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.gson.Gson;
-import com.mongodb.DB;
-import com.mongodb.MongoClient;
+import com.ust.Advert;
+import com.ust.AdvertService;
 
 public class FnUa {
 
@@ -62,10 +57,8 @@ public class FnUa {
 	// cashe
 	private URIBuilder uriBuilder;
 	private HttpClient httpClient;
-	private MongoClient mongoClient;
-	private Jongo jongo;
-	private DB db;
-	private MongoCollection adverts;
+
+	private AdvertService service;
 	private Connection con;
 	private Gson gson;
 
@@ -73,6 +66,7 @@ public class FnUa {
 
 	@Before
 	public void cashing() {
+		service = new AdvertService();
 		uriBuilder = new URIBuilder();
 		httpClient = new DefaultHttpClient();
 		gson = new Gson();
@@ -123,8 +117,7 @@ public class FnUa {
 
 	@After
 	public void shutdown() {
-		mongoClient.close();
-		log.debug("mongo client closed");
+		service.shutdown();
 
 		httpClient.getConnectionManager().shutdown();
 		log.debug("http client closed");
@@ -141,8 +134,8 @@ public class FnUa {
 			scan();
 
 			log.info("Saving all collected links...");
-			connectToDB();
-			saveScanned();
+			service.startup(dbName);
+			service.save(ads);
 
 			extract();
 			download();
@@ -193,32 +186,15 @@ public class FnUa {
 		}
 	}
 
-	private void connectToDB() throws UnknownHostException {
-		mongoClient = new MongoClient();
-		db = mongoClient.getDB(dbName);
-		jongo = new Jongo(db);
-		adverts = jongo.getCollection("advert");
-
-	}
-
-	private void saveScanned() {
-		// save each url to separate file
-		for (Advert ad : ads) {
-			adverts.save(ad);
-		}
-	}
-
 	private void extract() {
 		// load unprocessed items
-		for (Iterator<Advert> i = adverts
-				.find(forceUpdate ? "" : "{processed:'false'}")
-				.as(Advert.class).iterator(); i.hasNext();) {
+		for (Iterator<Advert> i = service.iterator(forceUpdate); i.hasNext();) {
 			Advert ad = i.next();
 
 			// save to appropriate file
 			if (parse(ad)) {
-				ad.processed = true;
-				adverts.save(ad);
+				ad.setProcessed(true);
+				service.save(ad);
 			}
 		}
 	}
@@ -233,46 +209,51 @@ public class FnUa {
 					.setQuery(
 							URLEncodedUtils.format(Arrays
 									.asList(new BasicNameValuePair("ad_id",
-											String.valueOf(ad._id))), "UTF-8"))
-					.build().toString();
+											String.valueOf(ad.get_id()))),
+									"UTF-8")).build().toString();
 			log.trace("connecting to " + url);
 			doc = con.url(url).get();
 		} catch (IOException e) {
-			log.error("failed connection to " + host + ad.url);
+			log.error("failed connection to " + host + ad.getUrl());
 			return false;
 		} catch (URISyntaxException e) {
-			log.error("failed to build uri with: " + host + ad.url);
+			log.error("failed to build uri with: " + host + ad.getUrl());
 		}
-		ad.title = doc.select("h1").text();
-		ad.description = doc.select("p.ad-desc").text();
-		ad.price = doc.select("p.ad-price b").text();
-		ad.date = doc.select("p.ad-pub-date b").first().text();
+		ad.setTitle(doc.select("h1").text());
+		ad.setDescription(doc.select("p.ad-desc").text());
+		ad.setPrice(doc.select("p.ad-price b").text());
+		ad.setDate(doc.select("p.ad-pub-date b").first().text());
 		// collect images urls
 		Elements imgs = doc.select("#ad-thumbs a.highslide");
 		if (!imgs.isEmpty()) {
-			ad.imgs = new ArrayList<String>();
+			ad.setImgs(new ArrayList<String>());
 			for (Iterator<Element> i = imgs.iterator(); i.hasNext();) {
-				ad.imgs.add(i.next().attr("href"));
+				ad.getImgs().add(i.next().attr("href"));
 			}
 		}
 		// collect phone numbers
 		Map<String, String> numbers = requestNumbers(
-				"fn_rubrics_menu/backendTest.php", ad._id,
+				"fn_rubrics_menu/backendTest.php", ad.get_id(),
 				doc.select("#show-phone").attr("data-hash"));
 		if (numbers != null && numbers.size() > 0) {
-			ad.numbers = new ArrayList<>();
-			for (Iterator<Element> i = doc.select("p.ad-contacts b span").iterator(); i
-					.hasNext();) {
+			ad.setNumbers(new ArrayList<String>());
+			for (Iterator<Element> i = doc.select("p.ad-contacts b span")
+					.iterator(); i.hasNext();) {
 				Element e = i.next();
-				ad.numbers.add(e.parent().ownText().replaceAll("\\D", "")
-						+ numbers.get("aphone" + (ad.numbers.size()+1)));
-				log.trace("number : " + ad.numbers.get(ad.numbers.size() - 1));
+				ad.getNumbers().add(
+						e.parent().ownText().replaceAll("\\D", "")
+								+ numbers.get("aphone"
+										+ (ad.getNumbers().size() + 1)));
+				log.trace("number : "
+						+ ad.getNumbers().get(ad.getNumbers().size() - 1));
 			}
 		}
 
-		log.debug("parsed id " + ad._id + " price " + ad.price + " phones: "
-				+ (ad.numbers != null ? ad.numbers.size() : 0)
-				+ " images count " + (ad.imgs != null ? ad.imgs.size() : 0));
+		log.debug("parsed id " + ad.get_id() + " price " + ad.getPrice()
+				+ " phones: "
+				+ (ad.getNumbers() != null ? ad.getNumbers().size() : 0)
+				+ " images count "
+				+ (ad.getImgs() != null ? ad.getImgs().size() : 0));
 		return true;
 	}
 
@@ -326,32 +307,6 @@ public class FnUa {
 		// download images...
 	}
 
-}
-
-class Advert {
-	static final String REGEX_ID = "(?<=ad_id=)\\d+";
-
-	public Advert() {
-		// convenience for unmarshalling
-	}
-
-	public Advert(String url) {
-		Matcher m = Pattern.compile(REGEX_ID).matcher(url);
-		m.find();
-		this._id = Long.parseLong(m.group());
-		this.url = url;
-		this.processed = false;
-	}
-
-	long _id;
-	String url;
-	public String title;
-	public String description;
-	public String price;
-	public List<String> imgs;
-	public List<String> numbers;
-	public String date;
-	boolean processed;
 }
 
 class PhoneRequest {
