@@ -275,8 +275,10 @@ public class FnUa {
 			// extract numbers from response
 			InputStreamReader stream = new InputStreamReader(httpClient
 					.execute(request).getEntity().getContent());
-			// log.trace(IOUtils.toString(stream));
-
+			
+			class PhoneResponse {
+				Map<String, String> items;
+			}
 			PhoneResponse data = gson.fromJson(stream, PhoneResponse.class);
 			numbers = data.items;
 
@@ -303,21 +305,4 @@ public class FnUa {
 
 }
 
-class PhoneRequest {
-	final String serviceName = "showphone";
 
-	long serverData;
-	String hashphone;
-
-	PhoneRequest(long id, String hash) {
-		serverData = id;
-		hashphone = hash;
-	}
-
-	PhoneRequest() {
-	}
-}
-
-class PhoneResponse {
-	Map<String, String> items;
-}

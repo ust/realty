@@ -42,7 +42,7 @@ public class AdvertService {
 
 			for (String adPhone : adPhones) {
 				boolean found = false;
-				Set<String> withouMe = new HashSet<>(adPhones);
+				Set<String> withouMe = new HashSet<String>(adPhones);
 				withouMe.remove(adPhone);
 
 				// update records in db
@@ -84,23 +84,19 @@ public class AdvertService {
 				.as(Advert.class).iterator();
 	}
 
+	public void save(Phone phone) {
+		phones.save(phone);
+	}
+
+	public Iterator<Phone> phoneIterator(boolean forceCheck) {
+		return phones.find(forceCheck ? "" : "{checked:'true'}")
+				.as(Phone.class).iterator();
+	}
+
 	public void shutdown() {
 		mongo.close();
 		log.debug("mongo client closed");
 
 	}
 
-}
-
-class Phone {
-	String _id;
-	Set<String> related;
-
-	Phone(String id, HashSet<String> related) {
-		this._id = id;
-		this.related = related;
-	}
-
-	Phone() {
-	}
 }
