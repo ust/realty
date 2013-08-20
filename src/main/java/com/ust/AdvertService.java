@@ -1,8 +1,9 @@
 package com.ust;
 
 import java.net.UnknownHostException;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,18 +34,38 @@ public class AdvertService {
 		adverts.save(ad);
 		log.debug("ad \\w id:" + ad.get_id() + " saved");
 
-		List<String> adPhones = ad.getPhones();
+		Set<String> adPhones = ad.getPhones();
 		if (adPhones != null && !adPhones.isEmpty()) {
-			// get existed phones
-			String query = "{field:{$in:" + adPhones.toArray(new String[0])
-					+ "}}";
+			// create query of existed phones
+			String query = "{field:{$in:" + adPhones + "}}";
 			log.trace("quering as " + query);
-			for (Iterator<Phone> i = phones.find(query).as(Phone.class)
-					.iterator(); i.hasNext();) {
-				for (String adPhone : adPhones) {
-					// add number
-					// add related numbers
-					break;
+
+			for (String adPhone : adPhones) {
+				boolean found = false;
+				Set<String> withouMe = new HashSet<>(adPhones);
+				withouMe.remove(adPhone);
+
+				// update records in db
+				for (Iterator<Phone> i = phones.find(query).as(Phone.class)
+						.iterator(); i.hasNext();) {
+					Phone record = i.next();
+					if (adPhone.equals(record._id)) {
+						found = true;
+						if (record.related == null) {
+							record.related = new HashSet<String>();
+						}
+						int before = record.related.size();
+						record.related.addAll(withouMe);
+						log.debug("add related "
+								+ (record.related.size() - before));
+					}
+				}
+
+				// insert new
+				if (!found) {
+					phones.save(new Phone(adPhone,
+							new HashSet<String>(withouMe)));
+					log.debug("insert phone " + adPhone);
 				}
 			}
 		} else {
@@ -73,5 +94,13 @@ public class AdvertService {
 
 class Phone {
 	String _id;
-	List<String> related;
+	Set<String> related;
+
+	Phone(String id, HashSet<String> related) {
+		this._id = id;
+		this.related = related;
+	}
+
+	Phone() {
+	}
 }

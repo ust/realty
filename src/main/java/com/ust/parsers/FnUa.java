@@ -223,7 +223,7 @@ public class FnUa {
 		// collect images urls
 		Elements imgs = doc.select("#ad-thumbs a.highslide");
 		if (!imgs.isEmpty()) {
-			ad.setImgs(new ArrayList<String>());
+			ad.setImgs(new HashSet<String>());
 			for (Iterator<Element> i = imgs.iterator(); i.hasNext();) {
 				ad.getImgs().add(i.next().attr("href"));
 			}
@@ -233,17 +233,15 @@ public class FnUa {
 				"fn_rubrics_menu/backendTest.php", ad.get_id(),
 				doc.select("#show-phone").attr("data-hash"));
 		if (numbers != null && numbers.size() > 0) {
-			ad.setPhones(new ArrayList<String>());
+			ArrayList<String> phones = new ArrayList<String>();
 			for (Iterator<Element> i = doc.select("p.ad-contacts b span")
 					.iterator(); i.hasNext();) {
 				Element e = i.next();
-				ad.getPhones().add(
-						e.parent().ownText().replaceAll("\\D", "")
-								+ numbers.get("aphone"
-										+ (ad.getPhones().size() + 1)));
-				log.trace("number : "
-						+ ad.getPhones().get(ad.getPhones().size() - 1));
+				phones.add(e.parent().ownText().replaceAll("\\D", "")
+						+ numbers.get("aphone" + (phones.size() + 1)));
+				log.trace("number : " + phones.get(phones.size() - 1));
 			}
+			ad.setPhones(new HashSet<String>(phones));
 		}
 
 		log.debug("parsed id " + ad.get_id() + " price " + ad.getPrice()

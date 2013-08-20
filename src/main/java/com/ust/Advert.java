@@ -1,6 +1,6 @@
 package com.ust;
 
-import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,8 +24,8 @@ public class Advert {
 	private String title;
 	private String description;
 	private String price;
-	private List<String> imgs;
-	private List<String> phones;
+	private Set<String> imgs;
+	private Set<String> phones;
 	private String date;
 	private boolean processed;
 
@@ -69,19 +69,19 @@ public class Advert {
 		this.price = price;
 	}
 
-	public List<String> getImgs() {
+	public Set<String> getImgs() {
 		return imgs;
 	}
 
-	public void setImgs(List<String> imgs) {
+	public void setImgs(Set<String> imgs) {
 		this.imgs = imgs;
 	}
 
-	public List<String> getPhones() {
+	public Set<String> getPhones() {
 		return phones;
 	}
 
-	public void setPhones(List<String> phones) {
+	public void setPhones(Set<String> phones) {
 		this.phones = phones;
 	}
 
