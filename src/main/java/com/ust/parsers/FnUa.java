@@ -1,7 +1,5 @@
 package com.ust.parsers;
 
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +14,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -33,13 +32,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.google.gson.Gson;
 import com.ust.Advert;
 import com.ust.AdvertService;
-import com.ust.Phone;
 
 public class FnUa {
 
@@ -51,10 +47,7 @@ public class FnUa {
 	private String kievAll;
 	private String favoriteFilter;
 	private int timeout;
-	private String dbName;
-	private String imgDir;
 	private int topLim;
-	private boolean forceUpdate;
 	// cashe
 	private URIBuilder uriBuilder;
 	private HttpClient httpClient;
@@ -65,54 +58,22 @@ public class FnUa {
 
 	private HashSet<Advert> ads;
 
-	@Test
-	public void grab() {
-		long start = System.currentTimeMillis();
-
-		try {
-			connectToSite();
-
-			log.info("Scanning links in filter...");
-			scan();
-
-			log.info("Saving all collected links...");
-			service.startup(dbName);
-			service.save(ads);
-
-			extract();
-			check();
-			download();
-		} catch (UnknownHostException e) {
-			log.error(e);
-			fail("DB problems");
-		} catch (IOException e) {
-			String msg = "connecting to FN.UA failed";
-			log.error(msg, e);
-			fail(msg);
-		} catch (Exception e) {
-			log.error("", e);
-			fail("See logs for details");
-		}
-
-		log.info("Fn.ua parsed successfully in "
-				+ (System.currentTimeMillis() - start) / 1000 + " seconds");
+	public FnUa(AdvertService service) {
+		this.service = service;
 	}
 
-	@Before
-	public void cashing() {
-		service = new AdvertService();
+	public void cashe() {
 		uriBuilder = new URIBuilder();
 		httpClient = new DefaultHttpClient();
 		gson = new Gson();
 	}
 
-	@Before
 	public void loadProperties() {
-		log.trace("Loading properties...");
+		log.trace("Loading fn.ua parser properties...");
 		Properties props = new Properties();
 		String resource = "fn.ua.properties";
 		try {
-			InputStream in = FnUa.class.getResourceAsStream(resource);
+			InputStream in = getClass().getResourceAsStream(resource);
 			if (in != null) {
 				props.load(in);
 				in.close();
@@ -133,28 +94,11 @@ public class FnUa {
 		favoriteFilter = props.getProperty("favorite.filter");
 		log.debug("loaded property \"favorite\" is: " + favoriteFilter);
 
-		dbName = props.getProperty("db.name");
-		log.debug("loaded property \"db.name\" is: " + dbName);
-
-		imgDir = props.getProperty("img.dir");
-		log.debug("loaded property \"img.dir\" is: " + imgDir);
-
 		timeout = Integer.parseInt(props.getProperty("timeout"));
 		log.debug("loaded property \"timeout\" is: " + timeout);
 
 		topLim = Integer.parseInt(props.getProperty("pages.depth"));
 		log.debug("loaded property \"pages.depth\" is: " + topLim);
-
-		forceUpdate = Boolean.parseBoolean(props.getProperty("foce.update"));
-		log.debug("loaded property \"foce.update\" is: " + forceUpdate);
-	}
-
-	@After
-	public void shutdown() {
-		service.shutdown();
-
-		httpClient.getConnectionManager().shutdown();
-		log.debug("http client closed");
 	}
 
 	/**
@@ -162,7 +106,7 @@ public class FnUa {
 	 * @throws UnknownHostException
 	 * 
 	 */
-	private void connectToSite() throws URISyntaxException {
+	public void connect() throws URISyntaxException {
 		log.trace("Connecting to fn.ua...");
 		// XXX separate path from query parameters
 		URI uri = uriBuilder.setScheme(scheme).setHost(host)
@@ -170,7 +114,9 @@ public class FnUa {
 		con = Jsoup.connect(uri.toString()).timeout(timeout);
 	}
 
-	private void scan() throws IOException {
+	public Set<Advert> scan() throws IOException {
+		log.info("Scanning links in filter...");
+
 		ads = new HashSet<Advert>();
 		Document doc = con.get();
 		// XXX doing by page counter neither duplicate occurrence
@@ -186,17 +132,35 @@ public class FnUa {
 				log.trace("find url: " + url);
 			}
 		}
+		return ads.isEmpty() ? null : ads;
 	}
 
-	private void extract() {
+	public void extract(boolean updateAll) {
 		// load unprocessed items
-		for (Iterator<Advert> i = service.iterator(forceUpdate); i.hasNext();) {
+		for (Iterator<Advert> i = service.iterator(updateAll); i.hasNext();) {
 			Advert ad = i.next();
 			if (parse(ad)) {
 				ad.setProcessed(true);
 				service.save(ad);
 			}
 		}
+	}
+
+	public void download(String toDir) throws IOException {
+		String currDir = new File("").getCanonicalPath();
+		File imgs = new File(currDir + toDir);
+		if (!imgs.exists()) {
+			imgs.mkdir();
+		}
+		// download images...
+	}
+
+	@After
+	public void shutdown() {
+		service.shutdown();
+
+		httpClient.getConnectionManager().shutdown();
+		log.debug("http client closed");
 	}
 
 	private boolean parse(Advert ad) {
@@ -275,14 +239,9 @@ public class FnUa {
 			log.debug("uri encoded: " + uri);
 
 			// extract numbers from response
-			InputStreamReader stream = new InputStreamReader(httpClient
-					.execute(request).getEntity().getContent());
-
-			class PhoneResponse {
-				Map<String, String> items;
-			}
-			PhoneResponse data = gson.fromJson(stream, PhoneResponse.class);
-			numbers = data.items;
+			numbers = gson.fromJson(
+					new InputStreamReader(httpClient.execute(request)
+							.getEntity().getContent()), PhoneResponse.class).items;
 
 		} catch (UnsupportedEncodingException e) {
 			log.error("Incorrect encoding: ", e);
@@ -295,23 +254,8 @@ public class FnUa {
 		}
 		return numbers;
 	}
+}
 
-	private void check() {
-		// load unprocessed items
-		for (Iterator<Phone> i = service.phoneIterator(true); i.hasNext();) {
-			Phone phone = i.next();
-			service.save(phone);
-			
-		}
-	}
-
-	private void download() throws IOException {
-		String currDir = new File("").getCanonicalPath();
-		File imgs = new File(currDir + imgDir);
-		if (!imgs.exists()) {
-			imgs.mkdir();
-		}
-		// download images...
-	}
-
+class PhoneResponse {
+	Map<String, String> items;
 }

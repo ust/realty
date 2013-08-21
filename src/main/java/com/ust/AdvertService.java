@@ -74,8 +74,16 @@ public class AdvertService {
 	}
 
 	public void save(Iterable<Advert> ads) {
-		for (Advert ad : ads) {
-			adverts.save(ad);
+		boolean empty = true;
+		if (ads != null) {
+			for (Advert ad : ads) {
+				empty = false;
+				adverts.save(ad);
+			}
+
+		}
+		if (empty) {
+			log.info("There is nothing to save");
 		}
 	}
 
