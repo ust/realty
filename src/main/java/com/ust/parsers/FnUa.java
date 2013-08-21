@@ -39,6 +39,7 @@ import org.junit.Test;
 import com.google.gson.Gson;
 import com.ust.Advert;
 import com.ust.AdvertService;
+import com.ust.Phone;
 
 public class FnUa {
 
@@ -63,6 +64,39 @@ public class FnUa {
 	private Gson gson;
 
 	private HashSet<Advert> ads;
+
+	@Test
+	public void grab() {
+		long start = System.currentTimeMillis();
+
+		try {
+			connectToSite();
+
+			log.info("Scanning links in filter...");
+			scan();
+
+			log.info("Saving all collected links...");
+			service.startup(dbName);
+			service.save(ads);
+
+			extract();
+			check();
+			download();
+		} catch (UnknownHostException e) {
+			log.error(e);
+			fail("DB problems");
+		} catch (IOException e) {
+			String msg = "connecting to FN.UA failed";
+			log.error(msg, e);
+			fail(msg);
+		} catch (Exception e) {
+			log.error("", e);
+			fail("See logs for details");
+		}
+
+		log.info("Fn.ua parsed successfully in "
+				+ (System.currentTimeMillis() - start) / 1000 + " seconds");
+	}
 
 	@Before
 	public void cashing() {
@@ -121,38 +155,6 @@ public class FnUa {
 
 		httpClient.getConnectionManager().shutdown();
 		log.debug("http client closed");
-	}
-
-	@Test
-	public void grab() {
-		long start = System.currentTimeMillis();
-
-		try {
-			connectToSite();
-
-			log.info("Scanning links in filter...");
-			scan();
-
-			log.info("Saving all collected links...");
-			service.startup(dbName);
-			service.save(ads);
-
-			extract();
-			download();
-		} catch (UnknownHostException e) {
-			log.error(e);
-			fail("DB problems");
-		} catch (IOException e) {
-			String msg = "connecting to FN.UA failed";
-			log.error(msg, e);
-			fail(msg);
-		} catch (Exception e) {
-			log.error("", e);
-			fail("See logs for details");
-		}
-
-		log.info("Fn.ua parsed successfully in "
-				+ (System.currentTimeMillis() - start) / 1000 + " seconds");
 	}
 
 	/**
@@ -275,7 +277,7 @@ public class FnUa {
 			// extract numbers from response
 			InputStreamReader stream = new InputStreamReader(httpClient
 					.execute(request).getEntity().getContent());
-			
+
 			class PhoneResponse {
 				Map<String, String> items;
 			}
@@ -294,6 +296,15 @@ public class FnUa {
 		return numbers;
 	}
 
+	private void check() {
+		// load unprocessed items
+		for (Iterator<Phone> i = service.phoneIterator(true); i.hasNext();) {
+			Phone phone = i.next();
+			service.save(phone);
+			
+		}
+	}
+
 	private void download() throws IOException {
 		String currDir = new File("").getCanonicalPath();
 		File imgs = new File(currDir + imgDir);
@@ -304,5 +315,3 @@ public class FnUa {
 	}
 
 }
-
-
