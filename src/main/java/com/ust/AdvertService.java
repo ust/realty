@@ -11,6 +11,8 @@ import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 
 import com.mongodb.MongoClient;
+import com.ust.model.Advert;
+import com.ust.model.Phone;
 
 public class AdvertService {
 	private static Logger log = LogManager.getLogger(AdvertService.class);
@@ -49,15 +51,15 @@ public class AdvertService {
 				for (Iterator<Phone> i = phones.find(query).as(Phone.class)
 						.iterator(); i.hasNext();) {
 					Phone record = i.next();
-					if (adPhone.equals(record._id)) {
+					if (adPhone.equals(record.get_id())) {
 						found = true;
-						if (record.related == null) {
-							record.related = new HashSet<String>();
+						if (record.getRelated() == null) {
+							record.setRelated(new HashSet<String>());
 						}
-						int before = record.related.size();
-						record.related.addAll(withouMe);
+						int before = record.getRelated().size();
+						record.getRelated().addAll(withouMe);
 						log.debug("add related "
-								+ (record.related.size() - before));
+								+ (record.getRelated().size() - before));
 					}
 				}
 

@@ -1,4 +1,4 @@
-package com.ust.parsers;
+package com.ust.parsers.ua.fn;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,12 +34,12 @@ import org.jsoup.select.Elements;
 import org.junit.After;
 
 import com.google.gson.Gson;
-import com.ust.Advert;
 import com.ust.AdvertService;
+import com.ust.model.Advert;
 
-public class FnUa {
+public class Fn {
 
-	private static Logger log = LogManager.getLogger(FnUa.class);
+	private static Logger log = LogManager.getLogger(Fn.class);
 
 	// properties
 	private String scheme;
@@ -47,18 +47,19 @@ public class FnUa {
 	private String kievAll;
 	private String favoriteFilter;
 	private int timeout;
-	private int topLim;
+	private int pageDepth;
+	private String userAgent;
 	// cashe
 	private URIBuilder uriBuilder;
 	private HttpClient httpClient;
 
 	private AdvertService service;
-	private Connection con;
+	private Connection connection;
 	private Gson gson;
 
 	private HashSet<Advert> ads;
 
-	public FnUa(AdvertService service) {
+	public Fn(AdvertService service) {
 		this.service = service;
 	}
 
@@ -97,8 +98,11 @@ public class FnUa {
 		timeout = Integer.parseInt(props.getProperty("timeout"));
 		log.debug("loaded property \"timeout\" is: " + timeout);
 
-		topLim = Integer.parseInt(props.getProperty("pages.depth"));
-		log.debug("loaded property \"pages.depth\" is: " + topLim);
+		pageDepth = Integer.parseInt(props.getProperty("pages.depth"));
+		log.debug("loaded property \"pages.depth\" is: " + pageDepth);
+
+		userAgent = props.getProperty("user.agent");
+		log.debug("loaded property \"user.agent\" is: " + userAgent);
 	}
 
 	/**
@@ -107,21 +111,26 @@ public class FnUa {
 	 * 
 	 */
 	public void connect() throws URISyntaxException {
-		log.trace("Connecting to fn.ua...");
 		// XXX separate path from query parameters
 		URI uri = uriBuilder.setScheme(scheme).setHost(host)
-				.setQuery(favoriteFilter).build();
-		con = Jsoup.connect(uri.toString()).timeout(timeout);
+				.setPath("listing_list.php").setQuery(favoriteFilter).build();
+		log.trace("uri is " + uri.toString());
+		connection = Jsoup.connect(uri.toString())// .userAgent(userAgent)
+				.timeout(timeout);
 	}
 
 	public Set<Advert> scan() throws IOException {
 		log.info("Scanning links in filter...");
-
 		ads = new HashSet<Advert>();
-		Document doc = con.get();
-		// XXX doing by page counter neither duplicate occurrence
-		outer: for (int i = 1; i <= topLim; con.data("p", "" + ++i)) {
-			doc = con.get();
+		Document doc = connection.get();
+
+		int pagesCount = Integer.parseInt(doc.select(".pages b").first().text()
+				.split("из")[1].replaceAll("\\D", ""));
+		log.debug("pages sutisfied filter " + pagesCount);
+
+		outer: for (int i = 1; pageDepth == -1 || i <= pageDepth
+				&& i <= pagesCount; connection.data("p", "" + ++i)) {
+			doc = connection.get();
 			log.debug("page: " + i);
 
 			for (Element e : doc.select(".offer-photo a")) {
@@ -175,7 +184,7 @@ public class FnUa {
 											String.valueOf(ad.get_id()))),
 									"UTF-8")).build().toString();
 			log.trace("connecting to " + url);
-			doc = con.url(url).get();
+			doc = connection.url(url).get();
 		} catch (IOException e) {
 			log.error("failed connection to " + host + ad.getUrl());
 			return false;

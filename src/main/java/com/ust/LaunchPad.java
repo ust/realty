@@ -13,18 +13,21 @@ import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ust.parsers.FnUa;
+import com.ust.model.Phone;
+import com.ust.parsers.ua.fn.Fn;
+import com.ust.parsers.ua.lun.Lun;
 
 public class LaunchPad {
 	private static Logger log = LogManager.getLogger(AdvertService.class);
-	
-	private FnUa parser;
+
+	private Fn parser;
+	private Lun checker;
 	private AdvertService service;
-	
+
 	private String dbName;
 	private String imgDir;
 	private boolean forceUpdate;
-	
+
 	@Before
 	public void loadProperties() {
 		log.trace("Loading main properties...");
@@ -49,34 +52,39 @@ public class LaunchPad {
 		forceUpdate = Boolean.parseBoolean(props.getProperty("foce.update"));
 		log.debug("loaded property \"foce.update\" is: " + forceUpdate);
 	}
-	
+
 	@Test
 	public void grab() {
 		long start = System.currentTimeMillis();
-		
-		
+
 		try {
 			log.info("Preparing...");
+			checker = new Lun();
 			service = new AdvertService();
-			parser = new FnUa(service);
+			parser = new Fn(service);
 			parser.cashe();
 			parser.loadProperties();
-			parser.connect();			
-			
+			parser.connect();
+
 			log.info("Saving all collected links...");
 			service.startup(dbName);
 			service.save(parser.scan());
 
 			parser.extract(forceUpdate);
-			this.check();
+			for (Iterator<Phone> i = service.phoneIterator(true); i.hasNext();) {
+				Phone p = i.next();
+				p.setBroker(checker.check(p.get_id()));
+				p.setChecked(true);
+				service.save(p);
+			}
 			parser.download(imgDir);
 			parser.shutdown();
-			
+
 		} catch (UnknownHostException e) {
 			log.error(e);
 			fail("DB problems");
 		} catch (IOException e) {
-			String msg = "connecting to FN.UA failed";
+			String msg = "atempt to connect with FN.UA failed";
 			log.error(msg, e);
 			fail(msg);
 		} catch (Exception e) {
@@ -87,13 +95,5 @@ public class LaunchPad {
 		log.info("Fn.ua parsed successfully in "
 				+ (System.currentTimeMillis() - start) / 1000 + " seconds");
 	}
-	
-	private void check() {
-		// load unprocessed items
-		for (Iterator<Phone> i = service.phoneIterator(true); i.hasNext();) {
-			Phone phone = i.next();
-			service.save(phone);
-			
-		}
-	}
+
 }

@@ -1,4 +1,4 @@
-package com.ust;
+package com.ust.model;
 
 import java.util.Set;
 import java.util.regex.Matcher;
