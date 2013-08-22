@@ -27,6 +27,7 @@ public class LaunchPad {
 	private String dbName;
 	private String imgDir;
 	private boolean forceUpdate;
+	private boolean skipUpdate;
 
 	@Before
 	public void loadProperties() {
@@ -51,6 +52,9 @@ public class LaunchPad {
 
 		forceUpdate = Boolean.parseBoolean(props.getProperty("foce.update"));
 		log.debug("loaded property \"foce.update\" is: " + forceUpdate);
+
+		skipUpdate = Boolean.parseBoolean(props.getProperty("skip.update"));
+		log.debug("loaded property \"skip.update\" is: " + skipUpdate);
 	}
 
 	@Test
@@ -70,13 +74,10 @@ public class LaunchPad {
 			service.startup(dbName);
 			service.save(parser.scan());
 
-			parser.extract(forceUpdate);
-			for (Iterator<Phone> i = service.phoneIterator(true); i.hasNext();) {
-				Phone p = i.next();
-				p.setBroker(checker.check(p.get_id()));
-				p.setChecked(true);
-				service.save(p);
+			if (!skipUpdate) {
+				parser.extract(forceUpdate);
 			}
+			this.check();
 			parser.download(imgDir);
 			parser.shutdown();
 
@@ -94,6 +95,20 @@ public class LaunchPad {
 
 		log.info("Fn.ua parsed successfully in "
 				+ (System.currentTimeMillis() - start) / 1000 + " seconds");
+	}
+
+	private void check() {
+		for (Iterator<Phone> i = service.phoneIterator(true); i.hasNext();) {
+			Phone p = i.next();
+			try {
+				p.setBroker(checker.check(p.get_id()));
+				p.setChecked(true);
+				service.save(p);
+			} catch (IOException e) {
+				// TODO try to truncate leading zero number
+				log.error("failed to check " + p.get_id());
+			}
+		}
 	}
 
 }

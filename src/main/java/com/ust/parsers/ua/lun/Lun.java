@@ -10,19 +10,20 @@ import org.jsoup.nodes.Document;
 public class Lun {
 	private static Logger log = LogManager.getLogger(Lun.class);
 
-	public boolean check(String phone) {
+	public boolean check(String phone) throws IOException {
 		boolean broker = false;
-		try {
-			Document doc = Jsoup.connect(
-					"http://www.lun.ua/" + phone + "-телефон").get();
-			String text = doc.select("h1").text();
-			log.trace("h1 text: " + text);
-			broker = text.contains("телефон риелтора");
-		} catch (IOException e) {
-			log.error("atempt to connect with LUN.UA failed", e);
-		}
+		Document doc = Jsoup.connect("http://www.lun.ua/" + phone + "-телефон")
+				.get();
+		String text = doc.select("h1").text();
+		log.trace("h1 text: " + text);
+
+		broker = text.contains("телефон риелтора");
 		if (!broker) {
-			log.info("ad without broker found!");
+			if (text.contains("телефон владельца")) {
+				log.info("ad without broker found!");
+			} else {
+				log.warn("unknown number " + phone);
+			}
 		}
 		return broker;
 	}

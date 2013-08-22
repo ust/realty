@@ -90,7 +90,7 @@ public class AdvertService {
 	}
 
 	public Iterator<Advert> iterator(boolean processed) {
-		return adverts.find(processed ? "" : "{processed:'false'}")
+		return adverts.find(processed ? "" : "{processed:false}")
 				.as(Advert.class).iterator();
 	}
 
