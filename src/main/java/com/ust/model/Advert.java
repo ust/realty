@@ -15,8 +15,7 @@ public class Advert {
 		Matcher m = Pattern.compile(REGEX_ID).matcher(url);
 		m.find();
 		this._id = Long.parseLong(m.group());
-		this.url = url;
-		this.processed = false;
+		this.url = url;		
 	}
 
 	private long _id;
@@ -28,6 +27,7 @@ public class Advert {
 	private Set<String> phones;
 	private String date;
 	private boolean processed;
+	private boolean removed;
 
 	public long get_id() {
 		return _id;
@@ -99,5 +99,13 @@ public class Advert {
 
 	public void setProcessed(boolean processed) {
 		this.processed = processed;
+	}
+
+	public boolean isRemoved() {
+		return removed;
+	}
+
+	public void setRemoved(boolean removed) {
+		this.removed = removed;
 	}
 }

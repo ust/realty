@@ -1,7 +1,5 @@
 package com.ust;
 
-import static org.junit.Assert.fail;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.UnknownHostException;
@@ -10,7 +8,6 @@ import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.ust.model.Phone;
@@ -29,8 +26,16 @@ public class LaunchPad {
 	private boolean forceUpdate;
 	private boolean skipUpdate;
 
-	@Before
-	public void loadProperties() {
+	public static void main(String... args) {
+		new LaunchPad().loadProperties().grab();
+	}
+
+	@Test
+	public void run() {
+		this.loadProperties().grab();
+	}
+
+	public LaunchPad loadProperties() {
 		log.trace("Loading main properties...");
 		Properties props = new Properties();
 		String resource = "main.properties";
@@ -55,10 +60,11 @@ public class LaunchPad {
 
 		skipUpdate = Boolean.parseBoolean(props.getProperty("skip.update"));
 		log.debug("loaded property \"skip.update\" is: " + skipUpdate);
+
+		return this;
 	}
 
-	@Test
-	public void grab() {
+	public LaunchPad grab() {
 		long start = System.currentTimeMillis();
 
 		try {
@@ -82,19 +88,17 @@ public class LaunchPad {
 			parser.shutdown();
 
 		} catch (UnknownHostException e) {
-			log.error(e);
-			fail("DB problems");
+			log.error("DB problems", e);
 		} catch (IOException e) {
-			String msg = "atempt to connect with FN.UA failed";
-			log.error(msg, e);
-			fail(msg);
+			log.error("Atempt to connect with FN.UA failed", e);
 		} catch (Exception e) {
 			log.error("", e);
-			fail("See logs for details");
 		}
 
 		log.info("Fn.ua parsed successfully in "
 				+ (System.currentTimeMillis() - start) / 1000 + " seconds");
+
+		return this;
 	}
 
 	private void check() {

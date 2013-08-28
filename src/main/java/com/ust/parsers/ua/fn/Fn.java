@@ -183,14 +183,30 @@ public class Fn {
 									.asList(new BasicNameValuePair("ad_id",
 											String.valueOf(ad.get_id()))),
 									"UTF-8")).build().toString();
-			log.trace("connecting to " + url);
-			doc = connection.url(url).get();
+
+			int status = connection.execute().statusCode();
+			log.trace("" + status + " from " + url);
+			switch (status) {
+			case 404:
+				log.debug(ad.get_id() + " removed");
+				ad.setRemoved(true);
+				return true;
+
+			case 200:
+				doc = connection.get();
+				break;
+
+			default:
+				log.warn("status unhandled");
+				break;
+			}
+		} catch (URISyntaxException e) {
+			log.error("failed to build uri with: " + host + ad.getUrl());
 		} catch (IOException e) {
 			log.error("failed connection to " + host + ad.getUrl());
 			return false;
-		} catch (URISyntaxException e) {
-			log.error("failed to build uri with: " + host + ad.getUrl());
 		}
+
 		ad.setTitle(doc.select("h1").text());
 		ad.setDescription(doc.select("p.ad-desc").text());
 		ad.setPrice(doc.select("p.ad-price b").text());
