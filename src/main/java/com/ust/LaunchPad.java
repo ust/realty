@@ -25,6 +25,7 @@ public class LaunchPad {
 	private String imgDir;
 	private boolean forceUpdate;
 	private boolean skipUpdate;
+	private boolean forceCheck;
 
 	public static void main(String... args) {
 		new LaunchPad().loadProperties().grab();
@@ -60,6 +61,9 @@ public class LaunchPad {
 
 		skipUpdate = Boolean.parseBoolean(props.getProperty("skip.update"));
 		log.debug("loaded property \"skip.update\" is: " + skipUpdate);
+
+		forceCheck = Boolean.parseBoolean(props.getProperty("force.check"));
+		log.debug("loaded property \"force.check\" is: " + forceCheck);
 
 		return this;
 	}
@@ -102,15 +106,15 @@ public class LaunchPad {
 	}
 
 	private void check() {
-		for (Iterator<Phone> i = service.phoneIterator(true); i.hasNext();) {
+		for (Iterator<Phone> i = service.phoneIterator(forceCheck); i.hasNext();) {
 			Phone p = i.next();
 			try {
-				p.setBroker(checker.check(p.get_id()));
-				p.setChecked(true);
+				checker.check(p);
 				service.save(p);
 			} catch (IOException e) {
-				// TODO try to truncate leading zero number
-				log.error("failed to check " + p.get_id());
+				log.error("failed to check " + p.getId());
+			} catch (RuntimeException e) {
+				// TODO: handle exception
 			}
 		}
 	}

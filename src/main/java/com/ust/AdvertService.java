@@ -51,7 +51,7 @@ public class AdvertService {
 				for (Iterator<Phone> i = phones.find(query).as(Phone.class)
 						.iterator(); i.hasNext();) {
 					Phone record = i.next();
-					if (adPhone.equals(record.get_id())) {
+					if (adPhone.equals(record.getId())) {
 						found = true;
 						if (record.getRelated() == null) {
 							record.setRelated(new HashSet<String>());
@@ -99,7 +99,7 @@ public class AdvertService {
 	}
 
 	public Iterator<Phone> phoneIterator(boolean forceCheck) {
-		return phones.find(forceCheck ? "" : "{checked:'true'}")
+		return phones.find(forceCheck ? "" : "{broker:'false'}")
 				.as(Phone.class).iterator();
 	}
 

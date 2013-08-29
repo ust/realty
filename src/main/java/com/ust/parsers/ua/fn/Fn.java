@@ -111,11 +111,10 @@ public class Fn {
 	 * 
 	 */
 	public void connect() throws URISyntaxException {
-		// XXX separate path from query parameters
 		URI uri = uriBuilder.setScheme(scheme).setHost(host)
 				.setPath("listing_list.php").setQuery(favoriteFilter).build();
 		log.trace("uri is " + uri.toString());
-		connection = Jsoup.connect(uri.toString())// .userAgent(userAgent)
+		connection = Jsoup.connect(uri.toString()).userAgent(userAgent)
 				.timeout(timeout);
 	}
 
@@ -184,7 +183,7 @@ public class Fn {
 											String.valueOf(ad.get_id()))),
 									"UTF-8")).build().toString();
 
-			int status = connection.execute().statusCode();
+			int status = connection.url(url).execute().statusCode();
 			log.trace("" + status + " from " + url);
 			switch (status) {
 			case 404:
@@ -207,6 +206,13 @@ public class Fn {
 			return false;
 		}
 
+		// check 404 page XXX: may be redundant
+		if ("Ошибка 404".equals(doc.select("h2").text())) {
+			log.debug(ad.get_id() + " removed");
+			ad.setRemoved(true);
+			return true;
+		}
+
 		ad.setTitle(doc.select("h1").text());
 		ad.setDescription(doc.select("p.ad-desc").text());
 		ad.setPrice(doc.select("p.ad-price b").text());
@@ -223,14 +229,27 @@ public class Fn {
 		Map<String, String> numbers = requestNumbers(
 				"fn_rubrics_menu/backendTest.php", ad.get_id(),
 				doc.select("#show-phone").attr("data-hash"));
+
+		// aggregate provider codes with numbers
 		if (numbers != null && numbers.size() > 0) {
 			ArrayList<String> phones = new ArrayList<String>();
 			for (Iterator<Element> i = doc.select("p.ad-contacts b span")
 					.iterator(); i.hasNext();) {
 				Element e = i.next();
-				phones.add(e.parent().ownText().replaceAll("\\D", "")
-						+ numbers.get("aphone" + (phones.size() + 1)));
-				log.trace("number : " + phones.get(phones.size() - 1));
+
+				// extract
+				String providerCode = e.parent().ownText()
+						.replaceAll("\\D", "");
+				// truncate possible leading zeros
+				if (providerCode.length() == 4 && providerCode.startsWith("0")) {
+					providerCode = providerCode.substring(1);
+				}
+				// order is important
+				String phone = providerCode
+						+ numbers.get("aphone" + (phones.size() + 1));
+
+				phones.add(phone);
+				log.trace("number : " + phone);
 			}
 			ad.setPhones(new HashSet<String>(phones));
 		}
