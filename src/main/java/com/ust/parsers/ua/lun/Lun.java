@@ -15,8 +15,8 @@ public class Lun {
 
 	public void check(Phone phone) throws IOException {
 		// connect & handle status
-		Response res = Jsoup.connect("http://www.lun.ua/" + phone.getId() + "-телефон")
-				.execute();
+		Response res = Jsoup.connect(
+				"http://www.lun.ua/" + phone.getId() + "-телефон").execute();
 		int status = res.statusCode();
 		switch (status) {
 		case 200:
@@ -31,7 +31,7 @@ public class Lun {
 			phone.setChecked(false);
 			return;
 		}
-		
+
 		// parse result
 		Document doc = res.parse();
 		String text = doc.select("h1").text();
@@ -44,9 +44,12 @@ public class Lun {
 
 		if (!phone.isBroker()) {
 			if (text.contains("телефон владельца")) {
-				log.info("ad without broker found!");
+				log.info(phone.getId() + " owner (!) ");
+			}
+			if (text.contains("новый телефон")) {
+				log.info(phone.getId() + " new (?)");
 			} else {
-				log.warn("unknown number " + phone.getId() + " with text: " + text);
+				log.warn(phone.getId() + " unknown (?) text: " + text);
 			}
 		} else {
 			log.trace(phone.getId() + " broker");
