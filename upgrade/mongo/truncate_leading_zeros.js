@@ -3,5 +3,7 @@ db.phones.find({$where:"this._id.length > 10"}).forEach(function (e) {
     doc._id = old.substring(1, 11); 
     db.phones.insert(doc); 
     db.phones.remove({_id : old});
+
+    // TODO db.phones.find() removed in related
   }
 )

@@ -34,13 +34,14 @@ public class AdvertService {
 
 	public void save(Advert ad) {
 		adverts.save(ad);
-		log.debug("ad \\w id:" + ad.get_id() + " saved");
+		log.debug("ad \\w id:" + ad.getId() + " saved");
 
 		Set<String> adPhones = ad.getPhones();
 		if (adPhones != null && !adPhones.isEmpty()) {
-			// create query of existed phones
+			// query existing phones
 			String query = "{field:{$in:" + adPhones + "}}";
 			log.trace("quering as " + query);
+			Iterable<Phone> records = phones.find(query).as(Phone.class);
 
 			for (String adPhone : adPhones) {
 				boolean found = false;
@@ -48,11 +49,15 @@ public class AdvertService {
 				withouMe.remove(adPhone);
 
 				// update records in db
-				for (Iterator<Phone> i = phones.find(query).as(Phone.class)
-						.iterator(); i.hasNext();) {
+				for (Iterator<Phone> i = records.iterator(); i.hasNext();) {
 					Phone record = i.next();
 					if (adPhone.equals(record.getId())) {
 						found = true;
+						if (record.getAds() == null) {
+							record.setAds(new HashSet<String>());
+						}
+						record.getAds().add(String.valueOf(ad.getId()));
+						
 						if (record.getRelated() == null) {
 							record.setRelated(new HashSet<String>());
 						}
@@ -65,13 +70,13 @@ public class AdvertService {
 
 				// insert new
 				if (!found) {
-					phones.save(new Phone(adPhone,
+					phones.save(new Phone(adPhone, String.valueOf(ad.getId()),
 							new HashSet<String>(withouMe)));
 					log.debug("insert phone " + adPhone);
 				}
 			}
 		} else {
-			log.debug("ad has no phones");
+			log.debug("no phones in advert");
 		}
 	}
 

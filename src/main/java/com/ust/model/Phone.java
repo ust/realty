@@ -8,10 +8,16 @@ public class Phone {
 	private boolean broker;
 	private boolean checked;
 	private Set<String> related;
+	private Set<String> ads;
 
-	public Phone(String id, HashSet<String> related) {
+	public Phone(String id, String ad, HashSet<String> related) {
 		this._id = id;
 		this.related = related;
+
+		if (ad != null) {
+			this.ads = new HashSet<String>();
+			this.ads.add(ad);
+		}
 	}
 
 	Phone() {
@@ -47,5 +53,13 @@ public class Phone {
 
 	public void setRelated(Set<String> related) {
 		this.related = related;
+	}
+
+	public Set<String> getAds() {
+		return ads;
+	}
+
+	public void setAds(Set<String> ads) {
+		this.ads = ads;
 	}
 }

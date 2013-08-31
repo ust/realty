@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -105,11 +104,6 @@ public class Fn {
 		log.debug("loaded property \"user.agent\" is: " + userAgent);
 	}
 
-	/**
-	 * @throws URISyntaxException
-	 * @throws UnknownHostException
-	 * 
-	 */
 	public void connect() throws URISyntaxException {
 		URI uri = uriBuilder.setScheme(scheme).setHost(host)
 				.setPath("listing_list.php").setQuery(favoriteFilter).build();
@@ -180,14 +174,14 @@ public class Fn {
 					.setQuery(
 							URLEncodedUtils.format(Arrays
 									.asList(new BasicNameValuePair("ad_id",
-											String.valueOf(ad.get_id()))),
+											String.valueOf(ad.getId()))),
 									"UTF-8")).build().toString();
 
 			int status = connection.url(url).execute().statusCode();
 			log.trace("" + status + " from " + url);
 			switch (status) {
 			case 404:
-				log.debug(ad.get_id() + " removed");
+				log.debug(ad.getId() + " removed");
 				ad.setRemoved(true);
 				return true;
 
@@ -208,7 +202,7 @@ public class Fn {
 
 		// check 404 page XXX: may be redundant
 		if ("Ошибка 404".equals(doc.select("h2").text())) {
-			log.debug(ad.get_id() + " removed");
+			log.debug(ad.getId() + " removed");
 			ad.setRemoved(true);
 			return true;
 		}
@@ -227,7 +221,7 @@ public class Fn {
 		}
 		// collect phone numbers
 		Map<String, String> numbers = requestNumbers(
-				"fn_rubrics_menu/backendTest.php", ad.get_id(),
+				"fn_rubrics_menu/backendTest.php", ad.getId(),
 				doc.select("#show-phone").attr("data-hash"));
 
 		// aggregate provider codes with numbers
@@ -254,7 +248,7 @@ public class Fn {
 			ad.setPhones(new HashSet<String>(phones));
 		}
 
-		log.debug("parsed id " + ad.get_id() + " price " + ad.getPrice()
+		log.debug("parsed id " + ad.getId() + " price " + ad.getPrice()
 				+ " phones: "
 				+ (ad.getPhones() != null ? ad.getPhones().size() : 0)
 				+ " images count "
