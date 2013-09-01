@@ -21,12 +21,18 @@ public class AdvertService {
 	private Jongo jongo;
 	private MongoCollection adverts;
 	private MongoCollection phones;
+	private boolean running;
 
 	public void startup(String dbName) throws UnknownHostException {
+		if (running) {
+			throw new IllegalStateException(
+					"Service is already in running state");
+		}
 		mongo = new MongoClient();
 		jongo = new Jongo(mongo.getDB(dbName));
 		adverts = jongo.getCollection("adverts");
 		phones = jongo.getCollection("phones");
+		running = true;
 
 		log.debug("mongo client started up");
 
@@ -57,7 +63,7 @@ public class AdvertService {
 							record.setAds(new HashSet<String>());
 						}
 						record.getAds().add(String.valueOf(ad.getId()));
-						
+
 						if (record.getRelated() == null) {
 							record.setRelated(new HashSet<String>());
 						}
@@ -94,24 +100,31 @@ public class AdvertService {
 		}
 	}
 
-	public Iterator<Advert> iterator(boolean processed) {
-		return adverts.find(processed ? "" : "{processed:false}")
-				.as(Advert.class).iterator();
+	public Iterable<Advert> load(boolean processed) {
+		return adverts.find(processed ? "" : "{processed:false}").as(
+				Advert.class);
 	}
 
 	public void save(Phone phone) {
 		phones.save(phone);
 	}
 
-	public Iterator<Phone> phoneIterator(boolean forceCheck) {
+	public Iterable<Phone> loadPhones(boolean forceCheck) {
 		return phones.find(forceCheck ? "" : "{broker:'false'}")
-				.as(Phone.class).iterator();
+				.as(Phone.class);
 	}
 
 	public void shutdown() {
+		if (!running) {
+			throw new IllegalStateException("Service is not in running state");
+		}
 		mongo.close();
 		log.debug("mongo client closed");
 
+	}
+
+	public boolean isRunning() {
+		return running;
 	}
 
 }

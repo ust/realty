@@ -28,15 +28,19 @@ public class LaunchPad {
 	private boolean forceCheck;
 
 	public static void main(String... args) {
-		new LaunchPad().loadProperties().grab();
+		new LaunchPad().scan().parse().check().print().exit();
 	}
 
 	@Test
 	public void run() {
-		this.loadProperties().grab();
+		this.configure().scan().parse().check().print().exit();
 	}
 
-	public LaunchPad loadProperties() {
+	public LaunchPad() {
+		service = new AdvertService();
+	}
+
+	public LaunchPad configure() {
 		log.trace("Loading main properties...");
 		Properties props = new Properties();
 		String resource = "main.properties";
@@ -65,31 +69,24 @@ public class LaunchPad {
 		forceCheck = Boolean.parseBoolean(props.getProperty("force.check"));
 		log.debug("loaded property \"force.check\" is: " + forceCheck);
 
+		if (parser != null) {
+			parser.configure();
+		}
+
 		return this;
 	}
 
-	public LaunchPad grab() {
+	public LaunchPad parse() {
 		long start = System.currentTimeMillis();
-
 		try {
-			log.info("Preparing...");
-			checker = new Lun();
-			service = new AdvertService();
-			parser = new Fn(service);
-			parser.cashe();
-			parser.loadProperties();
-			parser.connect();
-
-			log.info("Saving all collected links...");
-			service.startup(dbName);
-			service.save(parser.scan());
-
 			if (!skipUpdate) {
+				if (!service.isRunning()) {
+					service.startup(dbName);
+				}
+				getParser();
 				parser.extract(forceUpdate);
+				parser.download(imgDir);
 			}
-			this.check();
-			parser.download(imgDir);
-			parser.shutdown();
 
 		} catch (UnknownHostException e) {
 			log.error("DB problems", e);
@@ -98,16 +95,49 @@ public class LaunchPad {
 		} catch (Exception e) {
 			log.error("", e);
 		}
-
 		log.info("Fn.ua parsed successfully in "
 				+ (System.currentTimeMillis() - start) / 1000 + " seconds");
 
 		return this;
 	}
 
-	private void check() {
-		for (Iterator<Phone> i = service.phoneIterator(forceCheck); i.hasNext();) {
-			Phone p = i.next();
+	public LaunchPad scan() {
+		long start = System.currentTimeMillis();
+		try {
+
+			log.info("Saving all collected links...");
+			if (!service.isRunning()) {
+				service.startup(dbName);
+			}
+			getParser();
+			service.save(parser.scan());
+
+		} catch (UnknownHostException e) {
+			log.error("DB problems", e);
+		} catch (IOException e) {
+			log.error("Atempt to connect with FN.UA failed", e);
+		} catch (Exception e) {
+			log.error("", e);
+		}
+		log.info("Fn.ua scanned successfully in "
+				+ (System.currentTimeMillis() - start) / 1000 + " seconds");
+
+		return this;
+	}
+
+	public void getParser() {
+		if (parser == null) {
+			parser = new Fn(service);
+			parser.configure();
+		}
+	}
+
+	public LaunchPad check() {
+		if (checker == null) {
+			checker = new Lun();
+		}
+
+		for (Phone p : service.loadPhones(forceCheck)) {
 			try {
 				checker.check(p);
 				service.save(p);
@@ -117,6 +147,26 @@ public class LaunchPad {
 				// TODO: handle exception
 			}
 		}
+		return this;
+	}
+
+	public LaunchPad print() {
+		Iterator<Phone> i = service.loadPhones(false).iterator();
+		if (i.hasNext()) {
+			log.info("results, ads wthiout brokers:");
+			for (Phone p = i.next(); i.hasNext(); p = i.next()) {
+				log.info("	" + p.getAds());
+			}
+		} else {
+			log.info("------- no results :( -------");
+		}
+		return this;
+	}
+
+	public LaunchPad exit() {
+		parser.close();
+		service.shutdown();
+		return this;
 	}
 
 }

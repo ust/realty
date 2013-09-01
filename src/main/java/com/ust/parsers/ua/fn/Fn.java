@@ -30,7 +30,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.junit.After;
 
 import com.google.gson.Gson;
 import com.ust.AdvertService;
@@ -49,26 +48,20 @@ public class Fn {
 	private int pageDepth;
 	private String userAgent;
 	// cashe
+	private AdvertService service;
 	private URIBuilder uriBuilder;
 	private HttpClient httpClient;
-
-	private AdvertService service;
 	private Connection connection;
 	private Gson gson;
 
 	private HashSet<Advert> ads;
+	private boolean cashed;
 
 	public Fn(AdvertService service) {
 		this.service = service;
 	}
 
-	public void cashe() {
-		uriBuilder = new URIBuilder();
-		httpClient = new DefaultHttpClient();
-		gson = new Gson();
-	}
-
-	public void loadProperties() {
+	public void configure() {
 		log.trace("Loading fn.ua parser properties...");
 		Properties props = new Properties();
 		String resource = "fn.ua.properties";
@@ -104,15 +97,8 @@ public class Fn {
 		log.debug("loaded property \"user.agent\" is: " + userAgent);
 	}
 
-	public void connect() throws URISyntaxException {
-		URI uri = uriBuilder.setScheme(scheme).setHost(host)
-				.setPath("listing_list.php").setQuery(favoriteFilter).build();
-		log.trace("uri is " + uri.toString());
-		connection = Jsoup.connect(uri.toString()).userAgent(userAgent)
-				.timeout(timeout);
-	}
-
 	public Set<Advert> scan() throws IOException {
+		cashe();
 		log.info("Scanning links in filter...");
 		ads = new HashSet<Advert>();
 		Document doc = connection.get();
@@ -138,9 +124,10 @@ public class Fn {
 	}
 
 	public void extract(boolean updateAll) {
+		cashe();
+
 		// load unprocessed items
-		for (Iterator<Advert> i = service.iterator(updateAll); i.hasNext();) {
-			Advert ad = i.next();
+		for (Advert ad : service.load(updateAll)) {
 			if (parse(ad)) {
 				ad.setProcessed(true);
 				service.save(ad);
@@ -157,12 +144,29 @@ public class Fn {
 		// download images...
 	}
 
-	@After
-	public void shutdown() {
-		service.shutdown();
-
+	public void close() {
 		httpClient.getConnectionManager().shutdown();
 		log.debug("http client closed");
+	}
+
+	private void cashe() {
+		if (cashed) {
+			return;
+		}
+
+		uriBuilder = new URIBuilder();
+		try {
+			URI uri = uriBuilder.setScheme(scheme).setHost(host)
+					.setPath("listing_list.php").setQuery(favoriteFilter)
+					.build();
+			log.trace("uri is " + uri.toString());
+			connection = Jsoup.connect(uri.toString()).userAgent(userAgent)
+					.timeout(timeout);
+		} catch (URISyntaxException e) {
+			log.error("Couldn't build valid url");
+		}
+		httpClient = new DefaultHttpClient();
+		gson = new Gson();
 	}
 
 	private boolean parse(Advert ad) {
