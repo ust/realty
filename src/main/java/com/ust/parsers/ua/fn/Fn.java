@@ -2,7 +2,6 @@ package com.ust.parsers.ua.fn;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -12,7 +11,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import org.apache.http.client.ClientProtocolException;
@@ -34,69 +32,41 @@ import org.jsoup.select.Elements;
 import com.google.gson.Gson;
 import com.ust.AdvertService;
 import com.ust.model.Advert;
+import com.ust.parsers.GenericAdvertParser;
 
-public class Fn {
+public class Fn extends GenericAdvertParser {
 
 	private static Logger log = LogManager.getLogger(Fn.class);
 
-	// properties
-	private String scheme;
-	private String host;
-	private String kievAll;
-	private String favoriteFilter;
-	private int timeout;
-	private int pageDepth;
-	private String userAgent;
-	// cashe
 	private AdvertService service;
 	private URIBuilder uriBuilder;
 	private HttpClient httpClient;
 	private Connection connection;
 	private Gson gson;
 
+	
 	private HashSet<Advert> ads;
 	private boolean cashed;
+
 
 	public Fn(AdvertService service) {
 		this.service = service;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.ust.parsers.ua.fn.AdvertParser#configure()
+	 */
+	@Override
 	public void configure() {
 		log.trace("Loading fn.ua parser properties...");
-		Properties props = new Properties();
-		String resource = "fn.ua.properties";
-		try {
-			InputStream in = getClass().getResourceAsStream(resource);
-			if (in != null) {
-				props.load(in);
-				in.close();
-			}
-		} catch (IOException e) {
-			log.error("properties \"" + resource + "\" couldn't be load", e);
-		}
-
-		scheme = props.getProperty("scheme");
-		log.debug("loaded property \"scheme\" is: " + scheme);
-
-		host = props.getProperty("url");
-		log.debug("loaded property \"url\" is: " + host);
-
-		kievAll = props.getProperty("kiev.all");
-		log.debug("loaded property \"kiev.all\" is: " + kievAll);
-
-		favoriteFilter = props.getProperty("favorite.filter");
-		log.debug("loaded property \"favorite\" is: " + favoriteFilter);
-
-		timeout = Integer.parseInt(props.getProperty("timeout"));
-		log.debug("loaded property \"timeout\" is: " + timeout);
-
-		pageDepth = Integer.parseInt(props.getProperty("pages.depth"));
-		log.debug("loaded property \"pages.depth\" is: " + pageDepth);
-
-		userAgent = props.getProperty("user.agent");
-		log.debug("loaded property \"user.agent\" is: " + userAgent);
+		configFileName = "fn.ua.properties";
+		super.configure();		
 	}
 
+	/* (non-Javadoc)
+	 * @see com.ust.parsers.ua.fn.AdvertParser#scan()
+	 */
+	@Override
 	public Set<Advert> scan() throws IOException {
 		cashe();
 		log.info("Scanning links in filter...");
@@ -123,6 +93,10 @@ public class Fn {
 		return ads.isEmpty() ? null : ads;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.ust.parsers.ua.fn.AdvertParser#extract(boolean)
+	 */
+	@Override
 	public void extract(boolean updateAll) {
 		cashe();
 
@@ -135,6 +109,10 @@ public class Fn {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see com.ust.parsers.ua.fn.AdvertParser#download(java.lang.String)
+	 */
+	@Override
 	public void download(String toDir) throws IOException {
 		String currDir = new File("").getCanonicalPath();
 		File imgs = new File(currDir + toDir);
@@ -144,6 +122,10 @@ public class Fn {
 		// download images...
 	}
 
+	/* (non-Javadoc)
+	 * @see com.ust.parsers.ua.fn.AdvertParser#close()
+	 */
+	@Override
 	public void close() {
 		httpClient.getConnectionManager().shutdown();
 		log.debug("http client closed");

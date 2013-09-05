@@ -11,13 +11,14 @@ import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import com.ust.model.Phone;
+import com.ust.parsers.AdvertParser;
 import com.ust.parsers.ua.fn.Fn;
 import com.ust.parsers.ua.lun.Lun;
 
 public class LaunchPad {
 	private static Logger log = LogManager.getLogger(AdvertService.class);
 
-	private Fn parser;
+	private AdvertParser parser;
 	private Lun checker;
 	private AdvertService service;
 
