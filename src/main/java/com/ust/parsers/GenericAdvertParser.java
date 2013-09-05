@@ -8,7 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public abstract class GenericAdvertParser implements AdvertParser {
-	private static Logger log = LogManager.getLogger(GenericAdvertParser.class);
+	protected static Logger log = LogManager.getLogger(GenericAdvertParser.class);
 	
 	protected String configFileName;
 
