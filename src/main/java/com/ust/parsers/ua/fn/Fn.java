@@ -1,6 +1,5 @@
 package com.ust.parsers.ua.fn;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -23,8 +22,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -32,40 +29,26 @@ import org.jsoup.select.Elements;
 import com.google.gson.Gson;
 import com.ust.AdvertService;
 import com.ust.model.Advert;
-import com.ust.parsers.GenericAdvertParser;
+import com.ust.parsers.AbstractAdvertParser;
 
-public class Fn extends GenericAdvertParser {
+public class Fn extends AbstractAdvertParser {
 
 	private static Logger log = LogManager.getLogger(Fn.class);
 
-	private AdvertService service;
-	private URIBuilder uriBuilder;
 	private HttpClient httpClient;
-	private Connection connection;
 	private Gson gson;
 
-	
-	private HashSet<Advert> ads;
-	private boolean cashed;
-
-
 	public Fn(AdvertService service) {
-		this.service = service;
+		super(service);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.ust.parsers.ua.fn.AdvertParser#configure()
-	 */
 	@Override
 	public void configure() {
 		log.trace("Loading fn.ua parser properties...");
 		configFileName = "fn.ua.properties";
-		super.configure();		
+		super.configure();
 	}
 
-	/* (non-Javadoc)
-	 * @see com.ust.parsers.ua.fn.AdvertParser#scan()
-	 */
 	@Override
 	public Set<Advert> scan() throws IOException {
 		cashe();
@@ -93,65 +76,24 @@ public class Fn extends GenericAdvertParser {
 		return ads.isEmpty() ? null : ads;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.ust.parsers.ua.fn.AdvertParser#extract(boolean)
-	 */
-	@Override
-	public void extract(boolean updateAll) {
-		cashe();
-
-		// load unprocessed items
-		for (Advert ad : service.load(updateAll)) {
-			if (parse(ad)) {
-				ad.setProcessed(true);
-				service.save(ad);
-			}
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see com.ust.parsers.ua.fn.AdvertParser#download(java.lang.String)
-	 */
-	@Override
-	public void download(String toDir) throws IOException {
-		String currDir = new File("").getCanonicalPath();
-		File imgs = new File(currDir + toDir);
-		if (!imgs.exists()) {
-			imgs.mkdir();
-		}
-		// download images...
-	}
-
-	/* (non-Javadoc)
-	 * @see com.ust.parsers.ua.fn.AdvertParser#close()
-	 */
 	@Override
 	public void close() {
 		httpClient.getConnectionManager().shutdown();
 		log.debug("http client closed");
 	}
 
-	private void cashe() {
+	@Override
+	protected void cashe() {
 		if (cashed) {
 			return;
 		}
-
-		uriBuilder = new URIBuilder();
-		try {
-			URI uri = uriBuilder.setScheme(scheme).setHost(host)
-					.setPath("listing_list.php").setQuery(favoriteFilter)
-					.build();
-			log.trace("uri is " + uri.toString());
-			connection = Jsoup.connect(uri.toString()).userAgent(userAgent)
-					.timeout(timeout);
-		} catch (URISyntaxException e) {
-			log.error("Couldn't build valid url");
-		}
+		super.cashe();
 		httpClient = new DefaultHttpClient();
 		gson = new Gson();
 	}
 
-	private boolean parse(Advert ad) {
+	@Override
+	protected boolean parse(Advert ad) {
 		// parse separate items
 		Document doc = null;
 		try {

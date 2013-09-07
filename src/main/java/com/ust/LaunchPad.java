@@ -3,7 +3,9 @@ package com.ust;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
@@ -18,7 +20,7 @@ import com.ust.parsers.ua.lun.Lun;
 public class LaunchPad {
 	private static Logger log = LogManager.getLogger(AdvertService.class);
 
-	private AdvertParser parser;
+	private List<AdvertParser> parsers;
 	private Lun checker;
 	private AdvertService service;
 
@@ -70,10 +72,11 @@ public class LaunchPad {
 		forceCheck = Boolean.parseBoolean(props.getProperty("force.check"));
 		log.debug("loaded property \"force.check\" is: " + forceCheck);
 
-		if (parser != null) {
-			parser.configure();
+		if (parsers != null) {
+			for (AdvertParser p : parsers) {
+				p.configure();
+			}
 		}
-
 		return this;
 	}
 
@@ -84,9 +87,11 @@ public class LaunchPad {
 				if (!service.isRunning()) {
 					service.startup(dbName);
 				}
-				getParser();
-				parser.extract(forceUpdate);
-				parser.download(imgDir);
+				getParsers();
+				for (AdvertParser p : parsers) {
+					p.extract(forceUpdate);
+					p.download(imgDir);
+				}
 			}
 
 		} catch (UnknownHostException e) {
@@ -110,8 +115,10 @@ public class LaunchPad {
 			if (!service.isRunning()) {
 				service.startup(dbName);
 			}
-			getParser();
-			service.save(parser.scan());
+			getParsers();
+			for (AdvertParser p : parsers) {
+				service.save(p.scan());
+			}
 
 		} catch (UnknownHostException e) {
 			log.error("DB problems", e);
@@ -126,10 +133,10 @@ public class LaunchPad {
 		return this;
 	}
 
-	public void getParser() {
-		if (parser == null) {
-			parser = new Fn(service);
-			parser.configure();
+	public void getParsers() {
+		if (parsers == null) {
+			parsers = new ArrayList<AdvertParser>();
+			parsers.add(new Fn(service));
 		}
 	}
 
@@ -165,7 +172,9 @@ public class LaunchPad {
 	}
 
 	public LaunchPad exit() {
-		parser.close();
+		for (AdvertParser p : parsers) {
+			p.close();
+		}
 		service.shutdown();
 		return this;
 	}
