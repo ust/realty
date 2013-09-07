@@ -1,24 +1,10 @@
 package com.ust.model;
 
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Advert {
-	public static final String REGEX_ID = "(?<=ad_id=)\\d+";
-
-	public Advert() {
-		// convenience for unmarshalling
-	}
-
-	public Advert(String url) {
-		Matcher m = Pattern.compile(REGEX_ID).matcher(url);
-		m.find();
-		this._id = Long.parseLong(m.group());
-		this.url = url;		
-	}
-
 	private long _id;
+	private String domain;
 	private String url;
 	private String title;
 	private String description;
@@ -29,12 +15,29 @@ public class Advert {
 	private boolean processed;
 	private boolean removed;
 
+	public Advert(long id, String domain, String url) {
+		this._id = id;
+		this.domain = domain;
+		this.url = url;
+	}
+
+	public Advert() {
+	}
+
 	public long getId() {
 		return _id;
 	}
 
 	public void setId(long _id) {
 		this._id = _id;
+	}
+
+	public String getDomain() {
+		return domain;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
 	}
 
 	public String getUrl() {

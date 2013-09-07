@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -32,7 +31,6 @@ import com.ust.model.Advert;
 import com.ust.parsers.AbstractAdvertParser;
 
 public class Fn extends AbstractAdvertParser {
-
 	private static Logger log = LogManager.getLogger(Fn.class);
 
 	private HttpClient httpClient;
@@ -43,46 +41,6 @@ public class Fn extends AbstractAdvertParser {
 	}
 
 	@Override
-	public void configure() {
-		log.trace("Loading fn.ua parser properties...");
-		configFileName = "fn.ua.properties";
-		super.configure();
-	}
-
-	@Override
-	public Set<Advert> scan() throws IOException {
-		cashe();
-		log.info("Scanning links in filter...");
-		ads = new HashSet<Advert>();
-		Document doc = connection.get();
-
-		int pagesCount = Integer.parseInt(doc.select(".pages b").first().text()
-				.split("из")[1].replaceAll("\\D", ""));
-		log.debug("pages sutisfied filter " + pagesCount);
-
-		outer: for (int i = 1; pageDepth == -1 || i <= pageDepth
-				&& i <= pagesCount; connection.data("p", "" + ++i)) {
-			doc = connection.get();
-			log.debug("page: " + i);
-
-			for (Element e : doc.select(".offer-photo a")) {
-				String url = e.attr("href");
-				if (!ads.add(new Advert(url))) {
-					break outer;
-				}
-				log.trace("find url: " + url);
-			}
-		}
-		return ads.isEmpty() ? null : ads;
-	}
-
-	@Override
-	public void close() {
-		httpClient.getConnectionManager().shutdown();
-		log.debug("http client closed");
-	}
-
-	@Override
 	protected void cashe() {
 		if (cashed) {
 			return;
@@ -90,6 +48,19 @@ public class Fn extends AbstractAdvertParser {
 		super.cashe();
 		httpClient = new DefaultHttpClient();
 		gson = new Gson();
+	}
+
+	@Override
+	public void configure() {
+		log.trace("Loading fn.ua parser properties...");
+		configFileName = "fn.ua.properties";
+		super.configure();
+	}
+
+	@Override
+	protected int getPagesCount(Document doc) {
+		return Integer.parseInt(doc.select(".pages b").first().text()
+				.split("из")[1].replaceAll("\\D", ""));
 	}
 
 	@Override
@@ -182,6 +153,12 @@ public class Fn extends AbstractAdvertParser {
 				+ " images count "
 				+ (ad.getImgs() != null ? ad.getImgs().size() : 0));
 		return true;
+	}
+
+	@Override
+	public void close() {
+		httpClient.getConnectionManager().shutdown();
+		log.debug("http client closed");
 	}
 
 	private Map<String, String> requestNumbers(String url, final long id,

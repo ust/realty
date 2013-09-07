@@ -7,6 +7,9 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jsoup.nodes.Document;
 import org.junit.Test;
 
 import com.ust.AdvertService;
@@ -14,6 +17,7 @@ import com.ust.model.Advert;
 import com.ust.parsers.AbstractAdvertParser;
 
 public class Slando extends AbstractAdvertParser {
+	private static Logger log = LogManager.getLogger(Slando.class);
 
 	public Slando(AdvertService service) {
 		super(service);
@@ -87,5 +91,17 @@ public class Slando extends AbstractAdvertParser {
 		}
 		return result;
 
+	}
+
+	@Override
+	protected long getIdFromUrl(String url) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	protected int getPagesCount(Document doc) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

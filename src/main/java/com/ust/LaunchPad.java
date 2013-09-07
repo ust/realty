@@ -14,7 +14,7 @@ import org.junit.Test;
 
 import com.ust.model.Phone;
 import com.ust.parsers.AdvertParser;
-import com.ust.parsers.ua.fn.Fn;
+import com.ust.parsers.ua.aviso.Aviso;
 import com.ust.parsers.ua.lun.Lun;
 
 public class LaunchPad {
@@ -97,7 +97,7 @@ public class LaunchPad {
 		} catch (UnknownHostException e) {
 			log.error("DB problems", e);
 		} catch (IOException e) {
-			log.error("Atempt to connect with FN.UA failed", e);
+			log.error("Atempt to connect to donar failed", e);
 		} catch (Exception e) {
 			log.error("", e);
 		}
@@ -136,7 +136,8 @@ public class LaunchPad {
 	public void getParsers() {
 		if (parsers == null) {
 			parsers = new ArrayList<AdvertParser>();
-			parsers.add(new Fn(service));
+			//parsers.add(new Fn(service));
+			parsers.add(new Aviso(service));
 		}
 	}
 
