@@ -31,6 +31,16 @@ import com.ust.model.Advert;
 import com.ust.parsers.AbstractAdvertParser;
 
 public class Fn extends AbstractAdvertParser {
+	private static final String adImages = "#ad-thumbs a.highslide";
+
+	private static final String adDate = "p.ad-pub-date b";
+
+	private static final String adPrice = "p.ad-price b";
+
+	private static final String adDescription = "p.ad-desc";
+
+	private static final String adTitle = "h1";
+
 	private static Logger log = LogManager.getLogger(Fn.class);
 
 	private HttpClient httpClient;
@@ -69,10 +79,10 @@ public class Fn extends AbstractAdvertParser {
 		Document doc = null;
 		try {
 			String url = uriBuilder
-					.setPath("view.php")
+					.setPath(itemPath)
 					.setQuery(
 							URLEncodedUtils.format(Arrays
-									.asList(new BasicNameValuePair("ad_id",
+									.asList(new BasicNameValuePair(idPattern,
 											String.valueOf(ad.getId()))),
 									"UTF-8")).build().toString();
 
@@ -100,18 +110,18 @@ public class Fn extends AbstractAdvertParser {
 		}
 
 		// check 404 page XXX: may be redundant
-		if ("Ошибка 404".equals(doc.select("h2").text())) {
+		if (is404(doc)) {
 			log.debug(ad.getId() + " removed");
 			ad.setRemoved(true);
 			return true;
 		}
 
-		ad.setTitle(doc.select("h1").text());
-		ad.setDescription(doc.select("p.ad-desc").text());
-		ad.setPrice(doc.select("p.ad-price b").text());
-		ad.setDate(doc.select("p.ad-pub-date b").first().text());
+		ad.setTitle(doc.select(adTitle).first().text());
+		ad.setDescription(doc.select(adDescription).first().text());
+		ad.setPrice(doc.select(adPrice).first().text());
+		ad.setDate(doc.select(adDate).first().text());
 		// collect images urls
-		Elements imgs = doc.select("#ad-thumbs a.highslide");
+		Elements imgs = doc.select(adImages);
 		if (!imgs.isEmpty()) {
 			ad.setImgs(new HashSet<String>());
 			for (Iterator<Element> i = imgs.iterator(); i.hasNext();) {
@@ -153,6 +163,10 @@ public class Fn extends AbstractAdvertParser {
 				+ " images count "
 				+ (ad.getImgs() != null ? ad.getImgs().size() : 0));
 		return true;
+	}
+
+	protected boolean is404(Document doc) {
+		return "Ошибка 404".equals(doc.select("h2").text());
 	}
 
 	@Override

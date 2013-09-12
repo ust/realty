@@ -21,11 +21,10 @@ public class Aviso extends AbstractAdvertParser {
 		configFileName = "aviso.ua.properties";
 		super.configure();
 	}
-	
+
 	@Override
 	protected int getPagesCount(Document doc) {
-		// TODO Auto-generated method stub
-		return super.getPagesCount(doc);
+		return Integer.parseInt(doc.select("span.bold_orange").last().text());
 	}
 
 	@Override

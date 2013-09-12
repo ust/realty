@@ -31,7 +31,8 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 	// properties
 	protected String scheme;
 	protected String host;
-	protected String path;
+	protected String listPath;
+	protected String itemPath;
 	protected String favoriteFilter;
 	protected int timeout;
 	protected int pageDepth;
@@ -56,10 +57,10 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 		if (cashed) {
 			return;
 		}
-		
+
 		uriBuilder = new URIBuilder();
 		try {
-			URI uri = uriBuilder.setScheme(scheme).setHost(host).setPath(path)
+			URI uri = uriBuilder.setScheme(scheme).setHost(host).setPath(listPath)
 					.setQuery(favoriteFilter).build();
 			log.trace("uri is " + uri.toString());
 			connection = Jsoup.connect(uri.toString()).userAgent(userAgent)
@@ -67,7 +68,7 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 		} catch (URISyntaxException e) {
 			log.error("Couldn't build valid url");
 		}
-		
+
 		cashed = true;
 
 	}
@@ -92,8 +93,11 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 		host = props.getProperty("url");
 		log.debug("loaded property \"url\" is: " + host);
 
-		path = props.getProperty("path");
-		log.debug("loaded property \"path\" is: " + path);
+		listPath = props.getProperty("list.path");
+		log.debug("loaded property \"list.path\" is: " + listPath);
+		
+		itemPath = props.getProperty("item.path");
+		log.debug("loaded property \"item.path\" is: " + listPath);
 
 		favoriteFilter = props.getProperty("favorite.filter");
 		log.debug("loaded property \"favorite\" is: " + favoriteFilter);
@@ -106,7 +110,7 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 
 		userAgent = props.getProperty("user.agent");
 		log.debug("loaded property \"user.agent\" is: " + userAgent);
-		
+
 		rowSelector = props.getProperty("row.selector");
 		log.debug("loaded property \"row.selector\" is: " + rowSelector);
 	}
@@ -138,7 +142,7 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 	}
 
 	protected long getIdFromUrl(String url) {
-		Matcher m = Pattern.compile(idPattern).matcher(url);
+		Matcher m = Pattern.compile("(?<=" + idPattern + "=)\\d+").matcher(url);
 		m.find();
 		return Long.parseLong(m.group());
 	}
