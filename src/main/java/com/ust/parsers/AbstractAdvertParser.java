@@ -49,14 +49,13 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 	protected String adPrice;
 	protected String adImages;
 	protected String adDate;
-	
+
 	protected AdvertService service;
 	protected URIBuilder uriBuilder;
 	protected Connection connection;
 
 	protected HashSet<Advert> ads;
 	protected boolean cashed;
-
 
 	public AbstractAdvertParser(AdvertService service) {
 		this.service = service;
@@ -70,8 +69,8 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 
 		uriBuilder = new URIBuilder();
 		try {
-			URI uri = uriBuilder.setScheme(scheme).setHost(host).setPath(listPath)
-					.setQuery(favoriteFilter).build();
+			URI uri = uriBuilder.setScheme(scheme).setHost(host)
+					.setPath(listPath).setQuery(favoriteFilter).build();
 			log.trace("uri is " + uri.toString());
 			connection = Jsoup.connect(uri.toString()).userAgent(userAgent)
 					.timeout(timeout);
@@ -105,7 +104,7 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 
 		listPath = props.getProperty("list.path");
 		log.debug("loaded property \"list.path\" is: " + listPath);
-		
+
 		itemPath = props.getProperty("item.path");
 		log.debug("loaded property \"item.path\" is: " + listPath);
 
@@ -126,18 +125,19 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 
 		adTitle = props.getProperty("title.selector");
 		log.debug("loaded property \"title.selector\" is: " + adTitle);
-		
+
 		adDescription = props.getProperty("description.selector");
-		log.debug("loaded property \"description.selector\" is: " + adDescription);
-		
+		log.debug("loaded property \"description.selector\" is: "
+				+ adDescription);
+
 		adPrice = props.getProperty("price.selector");
 		log.debug("loaded property \"price.selector\" is: " + adPrice);
-		
+
 		adDate = props.getProperty("date.selector");
 		log.debug("loaded property \"date.selector\" is: " + adDate);
-		
+
 		adImages = props.getProperty("images.selector");
-		log.debug("loaded property \"images.selector\" is: " + adImages);		
+		log.debug("loaded property \"images.selector\" is: " + adImages);
 	}
 
 	@Override
@@ -148,19 +148,19 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 		Document doc = connection.get();
 
 		int pagesCount = getPagesCount(doc);
-		log.debug("pages sutisfied filter " + pagesCount);
+		log.debug("pages sutisfied filter {}", pagesCount);
 
 		outer: for (int i = 1; pageDepth == -1 || i <= pageDepth
 				&& i <= pagesCount; connection.data("p", "" + ++i)) {
 			doc = connection.get();
-			log.debug("page: " + i);
+			log.debug("page {}", i);
 
 			for (Element e : doc.select(rowSelector)) {
 				String url = e.attr("href");
 				if (!ads.add(new Advert(getIdFromUrl(url), host, url))) {
 					break outer;
 				}
-				log.trace("found url: " + url);
+				log.trace("found url {}", url);
 			}
 		}
 		return ads.isEmpty() ? null : ads;
@@ -189,7 +189,7 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 		}
 	}
 
-	protected boolean parse(Advert ad){
+	protected boolean parse(Advert ad) {
 		// parse separate items
 		Document doc = null;
 		try {
@@ -202,10 +202,10 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 									"UTF-8")).build().toString();
 
 			int status = connection.url(url).execute().statusCode();
-			log.trace("" + status + " from " + url);
+			log.trace("{} from {}", status, url);
 			switch (status) {
 			case 404:
-				log.debug(ad.getId() + " removed");
+				log.debug("{} removed", ad.getId());
 				ad.setRemoved(true);
 				return true;
 
@@ -218,15 +218,15 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 				break;
 			}
 		} catch (URISyntaxException e) {
-			log.error("failed to build uri with: " + host + ad.getUrl());
+			log.error("failed to build uri of {} {}", host, ad.getUrl());
 		} catch (IOException e) {
-			log.error("failed connection to " + host + ad.getUrl());
+			log.error("failed connection to {} {}", host, ad.getUrl());
 			return false;
 		}
 
 		// check 404 page XXX: may be redundant
 		if (is404(doc)) {
-			log.debug(ad.getId() + " removed");
+			log.debug("{} removed", ad.getId());
 			ad.setRemoved(true);
 			return true;
 		}
@@ -245,14 +245,13 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 		}
 		collectPhones(doc, ad);
 
-		log.debug("parsed id " + ad.getId() + " price " + ad.getPrice()
-				+ " phones: "
-				+ (ad.getPhones() != null ? ad.getPhones().size() : 0)
-				+ " images count "
-				+ (ad.getImgs() != null ? ad.getImgs().size() : 0));
+		log.debug("parsed id {}  price {} phones {} images count {}", ad
+				.getId(), ad.getPrice(), (ad.getPhones() != null ? ad
+				.getPhones().size() : 0), (ad.getImgs() != null ? ad.getImgs()
+				.size() : 0));
 		return true;
 	}
-	
+
 	protected boolean is404(Document doc) {
 		return "Ошибка 404".equals(doc.select("h2").text());
 	}
