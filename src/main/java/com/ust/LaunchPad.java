@@ -8,9 +8,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ust.model.Phone;
 import com.ust.parsers.AdvertParser;
@@ -18,7 +18,7 @@ import com.ust.parsers.ua.aviso.Aviso;
 import com.ust.parsers.ua.lun.Lun;
 
 public class LaunchPad {
-	private static Logger log = LogManager.getLogger(AdvertService.class);
+	private static Logger log = LoggerFactory.getLogger(LaunchPad.class);
 
 	private List<AdvertParser> parsers;
 	private Lun checker;
@@ -58,19 +58,19 @@ public class LaunchPad {
 		}
 
 		dbName = props.getProperty("db.name");
-		log.debug("loaded property \"db.name\" is: " + dbName);
+		log.debug("loaded property \"db.name\" is: ", dbName);
 
 		imgDir = props.getProperty("img.dir");
-		log.debug("loaded property \"img.dir\" is: " + imgDir);
+		log.debug("loaded property \"img.dir\" is: ", imgDir);
 
 		forceUpdate = Boolean.parseBoolean(props.getProperty("foce.update"));
-		log.debug("loaded property \"foce.update\" is: " + forceUpdate);
+		log.debug("loaded property \"foce.update\" is: ", forceUpdate);
 
 		skipUpdate = Boolean.parseBoolean(props.getProperty("skip.update"));
-		log.debug("loaded property \"skip.update\" is: " + skipUpdate);
+		log.debug("loaded property \"skip.update\" is: ", skipUpdate);
 
 		forceCheck = Boolean.parseBoolean(props.getProperty("force.check"));
-		log.debug("loaded property \"force.check\" is: " + forceCheck);
+		log.debug("loaded property \"force.check\" is: ", forceCheck);
 
 		if (parsers != null) {
 			for (AdvertParser p : parsers) {
@@ -101,9 +101,8 @@ public class LaunchPad {
 		} catch (Exception e) {
 			log.error("", e);
 		}
-		log.info("Fn.ua parsed successfully in "
-				+ (System.currentTimeMillis() - start) / 1000 + " seconds");
-
+		log.info("Fn.ua parsed successfully in {} seconds",
+				(System.currentTimeMillis() - start) / 1000);
 		return this;
 	}
 
@@ -127,8 +126,8 @@ public class LaunchPad {
 		} catch (Exception e) {
 			log.error("", e);
 		}
-		log.info("Fn.ua scanned successfully in "
-				+ (System.currentTimeMillis() - start) / 1000 + " seconds");
+		log.info("Fn.ua scanned successfully in {} seconds",
+				(System.currentTimeMillis() - start) / 1000);
 
 		return this;
 	}
@@ -136,7 +135,7 @@ public class LaunchPad {
 	public void getParsers() {
 		if (parsers == null) {
 			parsers = new ArrayList<AdvertParser>();
-			//parsers.add(new Fn(service));
+			// parsers.add(new Fn(service));
 			parsers.add(new Aviso(service));
 		}
 	}
@@ -151,7 +150,7 @@ public class LaunchPad {
 				checker.check(p);
 				service.save(p);
 			} catch (IOException e) {
-				log.error("failed to check " + p.getId());
+				log.error("failed to check {}", p.getId());
 			} catch (RuntimeException e) {
 				// TODO: handle exception
 			}
@@ -164,7 +163,7 @@ public class LaunchPad {
 		if (i.hasNext()) {
 			log.info("results, ads wthiout brokers:");
 			for (Phone p = i.next(); i.hasNext(); p = i.next()) {
-				log.info("	" + p.getAds());
+				log.info("	{}", p.getAds());
 			}
 		} else {
 			log.info("------- no results :( -------");

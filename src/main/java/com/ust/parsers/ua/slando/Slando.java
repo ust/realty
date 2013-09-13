@@ -94,14 +94,9 @@ public class Slando extends AbstractAdvertParser {
 	}
 
 	@Override
-	protected long getIdFromUrl(String url) {
+	protected void collectPhones(Document doc, Advert ad) {
 		// TODO Auto-generated method stub
-		return 0;
+		
 	}
-
-	@Override
-	protected int getPagesCount(Document doc) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+	
 }
