@@ -3,6 +3,8 @@ package com.ust.parsers;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -13,42 +15,81 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ust.AdvertService;
 import com.ust.model.Advert;
 
+@XmlRootElement(name = "parser")
+@XmlAccessorType(XmlAccessType.NONE)
 public abstract class AbstractAdvertParser implements AdvertParser {
-	private static Logger log = LogManager
+	private static Logger log = LoggerFactory
 			.getLogger(AbstractAdvertParser.class);
 
 	protected String configFileName;
 
 	// properties
+	@XmlElement(defaultValue = "http")
 	protected String scheme;
+	@XmlAttribute()
 	protected String host;
+	@XmlElement(name = "list-path")
 	protected String listPath;
+	@XmlElement(name = "item-path")
 	protected String itemPath;
+	@XmlElement(name = "filter")
 	protected String favoriteFilter;
+	@XmlAttribute
 	protected int timeout;
+	@XmlAttribute(name = "depth")
 	protected int pageDepth;
+	@XmlElement(name = "user-agent")
 	protected String userAgent;
+
+	// selectors & patterns
+	@XmlElement(name = "id-param-name")
+	protected String idParamName;
+	@XmlElement(name = "selector-row")
 	protected String rowSelector;
-	protected String idPattern;
-	protected String adTitle;
-	protected String adDescription;
-	protected String adPrice;
-	protected String adImages;
-	protected String adDate;
+	@XmlElement(name = "selector-title")
+	protected String titleSelector;
+	@XmlElement(name = "pattern-title")
+	protected String titlePattern;
+	@XmlElement(name = "selector-description")
+	protected String descriptionSelector;
+	@XmlElement(name = "pattern-description")
+	protected String descriptionPattern;
+	@XmlElement(name = "selector-price")
+	protected String priceSelector;
+	@XmlElement(name = "pattern-price")
+	protected String pricePattern;
+	@XmlElement(name = "selector-images")
+	protected String imagesSelector;
+	@XmlElement(name = "pattern-images")
+	protected String imagesPattern;
+	@XmlElement(name = "selector-date")
+	protected String dateSelector;
+	@XmlElement(name = "pattern-date")
+	protected String datePattern;
 
 	protected AdvertService service;
 	protected URIBuilder uriBuilder;
@@ -84,6 +125,41 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 
 	@Override
 	public void configure() {
+		loadProperties();
+
+		try {
+			// unmarshall parser
+			JAXBContext ctx = JAXBContext
+					.newInstance(AbstractAdvertParser.class);
+			Unmarshaller um = ctx.createUnmarshaller();
+			AbstractAdvertParser config = (AbstractAdvertParser) um
+					.unmarshal(getClass().getResourceAsStream(configFileName));
+
+			// copy state to current instance
+			// find xml non-transient fields
+			for (Field field : config.getClass().getFields()) {
+				for (Annotation annotation : field.getAnnotations()) {
+					
+					String name = annotation.getClass().getSimpleName();
+					if (XmlAttribute.class.getSimpleName().equals(name)
+							|| XmlElement.class.getSimpleName().equals(name)) {
+						// set value from config
+						try {
+							this.getClass().getField(field.getName()).set(this, field.get(config));
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						} 
+						
+					}
+				}
+			}
+
+		} catch (JAXBException e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	private void loadProperties() {
 		Properties props = new Properties();
 		try {
 			InputStream in = getClass().getResourceAsStream(configFileName);
@@ -123,21 +199,24 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 		rowSelector = props.getProperty("row.selector");
 		log.debug("loaded property \"row.selector\" is: " + rowSelector);
 
-		adTitle = props.getProperty("title.selector");
-		log.debug("loaded property \"title.selector\" is: " + adTitle);
+		idParamName = props.getProperty("id.pattern");
+		log.debug("loaded property \"id.pattern\" is: " + idParamName);
 
-		adDescription = props.getProperty("description.selector");
+		titleSelector = props.getProperty("title.selector");
+		log.debug("loaded property \"title.selector\" is: " + titleSelector);
+
+		descriptionSelector = props.getProperty("description.selector");
 		log.debug("loaded property \"description.selector\" is: "
-				+ adDescription);
+				+ descriptionSelector);
 
-		adPrice = props.getProperty("price.selector");
-		log.debug("loaded property \"price.selector\" is: " + adPrice);
+		priceSelector = props.getProperty("price.selector");
+		log.debug("loaded property \"price.selector\" is: " + priceSelector);
 
-		adDate = props.getProperty("date.selector");
-		log.debug("loaded property \"date.selector\" is: " + adDate);
+		dateSelector = props.getProperty("date.selector");
+		log.debug("loaded property \"date.selector\" is: " + dateSelector);
 
-		adImages = props.getProperty("images.selector");
-		log.debug("loaded property \"images.selector\" is: " + adImages);
+		imagesSelector = props.getProperty("images.selector");
+		log.debug("loaded property \"images.selector\" is: " + imagesSelector);
 	}
 
 	@Override
@@ -167,14 +246,13 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 	}
 
 	protected long getIdFromUrl(String url) {
-		Matcher m = Pattern.compile("(?<=" + idPattern + "=)\\d+").matcher(url);
+		Matcher m = Pattern.compile("(?<=" + idParamName + "=)\\d+").matcher(
+				url);
 		m.find();
 		return Long.parseLong(m.group());
 	}
 
-	protected int getPagesCount(Document doc) {
-		return 300;
-	}
+	protected abstract int getPagesCount(Document doc);
 
 	@Override
 	public void extract(boolean updateAll) {
@@ -197,7 +275,7 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 					.setPath(itemPath)
 					.setQuery(
 							URLEncodedUtils.format(Arrays
-									.asList(new BasicNameValuePair(idPattern,
+									.asList(new BasicNameValuePair(idParamName,
 											String.valueOf(ad.getId()))),
 									"UTF-8")).build().toString();
 
@@ -231,12 +309,12 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 			return true;
 		}
 
-		ad.setTitle(doc.select(adTitle).first().text());
-		ad.setDescription(doc.select(adDescription).first().text());
-		ad.setPrice(doc.select(adPrice).first().text());
-		ad.setDate(doc.select(adDate).first().text());
+		ad.setTitle(extractField(doc, titleSelector, ""));
+		ad.setDescription(extractField(doc, descriptionSelector, ""));
+		ad.setPrice(extractField(doc, priceSelector, ""));
+		ad.setDate(extractField(doc, dateSelector, ""));
 		// collect images urls
-		Elements imgs = doc.select(adImages);
+		Elements imgs = doc.select(imagesSelector);
 		if (!imgs.isEmpty()) {
 			ad.setImgs(new HashSet<String>());
 			for (Iterator<Element> i = imgs.iterator(); i.hasNext();) {
@@ -245,15 +323,37 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 		}
 		collectPhones(doc, ad);
 
-		log.debug("parsed id {}  price {} phones {} images count {}", ad
-				.getId(), ad.getPrice(), (ad.getPhones() != null ? ad
-				.getPhones().size() : 0), (ad.getImgs() != null ? ad.getImgs()
-				.size() : 0));
+		log.debug("parsed id " + ad.getId() + " price " + ad.getPrice()
+				+ " phones {} images count {}", ad.getImgs() != null ? ad
+				.getImgs().size() : 0, ad.getPhones() != null ? ad.getPhones()
+				.size() : 0);
 		return true;
 	}
 
-	protected boolean is404(Document doc) {
-		return "Ошибка 404".equals(doc.select("h2").text());
+	protected abstract boolean is404(Document doc);
+
+	private String extractField(Document doc, String selector, String regex) {
+		String result = null;
+		Elements e = doc.select(selector);
+		if (e != null && !e.isEmpty()) {
+			// apply pattern if it is specified
+			if (StringUtils.isNotBlank(regex)) {
+				String text = e.first().text();
+				Matcher m = Pattern.compile(regex).matcher(text);
+				m.find();
+				result = m.group();
+
+				if (StringUtils.isBlank(result)) {
+					log.error("No matches in {} by {}", text, regex);
+				}
+			} else {
+				result = e.first().text();
+			}
+		}
+		if (StringUtils.isEmpty(result)) {
+			log.error("nothing found by '{}' selector", selector);
+		}
+		return result;
 	}
 
 	protected abstract void collectPhones(Document doc, Advert ad);
@@ -271,5 +371,9 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 	@Override
 	public void close() {
 		// do nothing
+	}
+
+	public void setService(AdvertService service) {
+		this.service = service;
 	}
 }

@@ -2,16 +2,17 @@ package com.ust.parsers.ua.lun;
 
 import java.io.IOException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jsoup.Connection.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ust.model.Phone;
+import com.ust.parsers.AbstractAdvertParser;
 
 public class Lun {
-	private static Logger log = LogManager.getLogger(Lun.class);
+	private static Logger log = LoggerFactory.getLogger(AbstractAdvertParser.class);
 
 	public void check(Phone phone) throws IOException {
 		// connect & handle status

@@ -124,7 +124,7 @@ public class LaunchPad {
 		} catch (IOException e) {
 			log.error("Atempt to connect with FN.UA failed", e);
 		} catch (Exception e) {
-			log.error("", e);
+			log.error(e.getMessage(), e);
 		}
 		log.info("Fn.ua scanned successfully in {} seconds",
 				(System.currentTimeMillis() - start) / 1000);

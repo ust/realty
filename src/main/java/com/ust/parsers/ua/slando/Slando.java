@@ -7,17 +7,17 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jsoup.nodes.Document;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ust.AdvertService;
 import com.ust.model.Advert;
 import com.ust.parsers.AbstractAdvertParser;
 
 public class Slando extends AbstractAdvertParser {
-	private static Logger log = LogManager.getLogger(Slando.class);
+	private static Logger log = LoggerFactory.getLogger(AbstractAdvertParser.class);
 
 	public Slando(AdvertService service) {
 		super(service);
@@ -97,6 +97,18 @@ public class Slando extends AbstractAdvertParser {
 	protected void collectPhones(Document doc, Advert ad) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	protected int getPagesCount(Document doc) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	protected boolean is404(Document doc) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 	
 }

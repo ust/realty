@@ -95,9 +95,8 @@ public class Fn extends AbstractAdvertParser {
 	}
 
 	@Override
-	public void close() {
-		httpClient.getConnectionManager().shutdown();
-		log.debug("http client closed");
+	protected boolean is404(Document doc)  {
+		return "Ошибка 404".equals(doc.select("h2").text());
 	}
 
 	private Map<String, String> requestNumbers(String url, final long id,
@@ -119,12 +118,12 @@ public class Fn extends AbstractAdvertParser {
 			request.setHeader("Content-Type", "text/html");
 			request.setHeader("X-Requested-With", "XMLHttpRequest");
 			log.debug("uri encoded: {}", uri);
-
+	
 			// extract numbers from response
 			numbers = gson.fromJson(
 					new InputStreamReader(httpClient.execute(request)
 							.getEntity().getContent()), PhoneResponse.class).items;
-
+	
 		} catch (UnsupportedEncodingException e) {
 			log.error("Incorrect encoding: " + e.getMessage(), e);
 		} catch (ClientProtocolException e) {
@@ -139,6 +138,12 @@ public class Fn extends AbstractAdvertParser {
 			log.error("Failed to encode request url: " + e.getMessage(), e);
 		}
 		return numbers;
+	}
+
+	@Override
+	public void close() {
+		httpClient.getConnectionManager().shutdown();
+		log.debug("http client closed");
 	}
 }
 

@@ -5,17 +5,17 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mongodb.MongoClient;
 import com.ust.model.Advert;
 import com.ust.model.Phone;
 
 public class AdvertService {
-	private static Logger log = LogManager.getLogger(AdvertService.class);
+	private static Logger log = LoggerFactory.getLogger(AdvertService.class);
 
 	private MongoClient mongo;
 	private Jongo jongo;

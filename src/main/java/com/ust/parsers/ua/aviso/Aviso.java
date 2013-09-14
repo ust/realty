@@ -29,7 +29,13 @@ public class Aviso extends AbstractAdvertParser {
 
 	@Override
 	protected void collectPhones(Document doc, Advert ad) {
-		// TODO		
+		// TODO	impl
+	}
+
+	@Override
+	protected boolean is404(Document doc)  {
+		// TODO	impl
+		return false;
 	}
 
 }

@@ -9,18 +9,19 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
+import com.ust.parsers.AbstractAdvertParser;
 
 public class Advert extends HttpServlet {
 	private static final long serialVersionUID = -3790664628353703374L;
-	private static final Logger log = LogManager.getLogger(Advert.class);
+	private static final Logger log = LoggerFactory.getLogger(AbstractAdvertParser.class);
 
 	// cashe
 	private MongoCollection ads;
