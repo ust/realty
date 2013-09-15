@@ -27,7 +27,7 @@ public class Slando extends AbstractAdvertParser {
 	@Override
 	public void configure() {
 		configFileName = "slando.ua.properties";
-		super.configure();
+		super.configure(getClass());
 	}
 
 	@Override

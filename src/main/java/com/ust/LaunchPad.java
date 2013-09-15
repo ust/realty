@@ -58,19 +58,19 @@ public class LaunchPad {
 		}
 
 		dbName = props.getProperty("db.name");
-		log.debug("loaded property \"db.name\" is: ", dbName);
+		log.debug("loaded property 'db.name' is {}", dbName);
 
 		imgDir = props.getProperty("img.dir");
-		log.debug("loaded property \"img.dir\" is: ", imgDir);
+		log.debug("loaded property 'img.dir' is {}", imgDir);
 
 		forceUpdate = Boolean.parseBoolean(props.getProperty("foce.update"));
-		log.debug("loaded property \"foce.update\" is: ", forceUpdate);
+		log.debug("loaded property 'foce.update' is {}", forceUpdate);
 
 		skipUpdate = Boolean.parseBoolean(props.getProperty("skip.update"));
-		log.debug("loaded property \"skip.update\" is: ", skipUpdate);
+		log.debug("loaded property 'skip.update' is {}", skipUpdate);
 
 		forceCheck = Boolean.parseBoolean(props.getProperty("force.check"));
-		log.debug("loaded property \"force.check\" is: ", forceCheck);
+		log.debug("loaded property 'force.check' is {}", forceCheck);
 
 		if (parsers != null) {
 			for (AdvertParser p : parsers) {

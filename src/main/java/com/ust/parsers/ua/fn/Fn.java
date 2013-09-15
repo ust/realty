@@ -53,7 +53,7 @@ public class Fn extends AbstractAdvertParser {
 	public void configure() {
 		log.trace("Loading fn.ua parser properties...");
 		configFileName = "fn.ua.properties";
-		super.configure();
+		super.configure(getClass());
 	}
 
 	@Override

@@ -3,7 +3,6 @@ package com.ust.parsers;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -17,12 +16,11 @@ import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
@@ -38,9 +36,12 @@ import org.slf4j.LoggerFactory;
 
 import com.ust.AdvertService;
 import com.ust.model.Advert;
+import com.ust.parsers.ua.aviso.Aviso;
+import com.ust.parsers.ua.fn.Fn;
 
-@XmlRootElement(name = "parser")
+//@XmlRootElement(name = "parser")
 @XmlAccessorType(XmlAccessType.NONE)
+@XmlSeeAlso(value = { Fn.class, Aviso.class })
 public abstract class AbstractAdvertParser implements AdvertParser {
 	private static Logger log = LoggerFactory
 			.getLogger(AbstractAdvertParser.class);
@@ -48,9 +49,9 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 	protected String configFileName;
 
 	// properties
-	@XmlElement(defaultValue = "http")
+	@XmlElement(name = "scheme", defaultValue = "http")
 	protected String scheme;
-	@XmlAttribute()
+	@XmlAttribute(name = "host")
 	protected String host;
 	@XmlElement(name = "list-path")
 	protected String listPath;
@@ -58,7 +59,7 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 	protected String itemPath;
 	@XmlElement(name = "filter")
 	protected String favoriteFilter;
-	@XmlAttribute
+	@XmlAttribute(name = "timeout")
 	protected int timeout;
 	@XmlAttribute(name = "depth")
 	protected int pageDepth;
@@ -72,11 +73,11 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 	protected String rowSelector;
 	@XmlElement(name = "selector-title")
 	protected String titleSelector;
-	@XmlElement(name = "pattern-title")
+	// @XmlElement(name = "pattern-title")
 	protected String titlePattern;
 	@XmlElement(name = "selector-description")
 	protected String descriptionSelector;
-	@XmlElement(name = "pattern-description")
+	// @XmlElement(name = "pattern-description")
 	protected String descriptionPattern;
 	@XmlElement(name = "selector-price")
 	protected String priceSelector;
@@ -84,11 +85,11 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 	protected String pricePattern;
 	@XmlElement(name = "selector-images")
 	protected String imagesSelector;
-	@XmlElement(name = "pattern-images")
+	// @XmlElement(name = "pattern-images")
 	protected String imagesPattern;
 	@XmlElement(name = "selector-date")
 	protected String dateSelector;
-	@XmlElement(name = "pattern-date")
+	// @XmlElement(name = "pattern-date")
 	protected String datePattern;
 
 	protected AdvertService service;
@@ -97,6 +98,10 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 
 	protected HashSet<Advert> ads;
 	protected boolean cashed;
+
+	public AbstractAdvertParser() {
+		// unmarshalling
+	}
 
 	public AbstractAdvertParser(AdvertService service) {
 		this.service = service;
@@ -123,100 +128,52 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 
 	}
 
-	@Override
-	public void configure() {
-		loadProperties();
-
+	public void configure(Class<? extends AdvertParser> clazz) {
 		try {
 			// unmarshall parser
-			JAXBContext ctx = JAXBContext
-					.newInstance(AbstractAdvertParser.class);
-			Unmarshaller um = ctx.createUnmarshaller();
-			AbstractAdvertParser config = (AbstractAdvertParser) um
+			AbstractAdvertParser config = (AbstractAdvertParser) JAXBContext
+					.newInstance(AbstractAdvertParser.class, clazz)
+					.createUnmarshaller()
 					.unmarshal(getClass().getResourceAsStream(configFileName));
 
-			// copy state to current instance
-			// find xml non-transient fields
-			for (Field field : config.getClass().getFields()) {
-				for (Annotation annotation : field.getAnnotations()) {
-					
-					String name = annotation.getClass().getSimpleName();
-					if (XmlAttribute.class.getSimpleName().equals(name)
-							|| XmlElement.class.getSimpleName().equals(name)) {
-						// set value from config
-						try {
-							this.getClass().getField(field.getName()).set(this, field.get(config));
-						} catch (Exception e) {
-							log.error(e.getMessage(), e);
-						} 
-						
-					}
-				}
-			}
+			// copy generic parser fields
+			copyFileds(AbstractAdvertParser.class, config);
+			// copy concrete parser fields
+			copyFileds(clazz, config);
 
 		} catch (JAXBException e) {
 			log.error(e.getMessage(), e);
 		}
 	}
 
-	private void loadProperties() {
-		Properties props = new Properties();
-		try {
-			InputStream in = getClass().getResourceAsStream(configFileName);
-			if (in != null) {
-				props.load(in);
-				in.close();
+	private void copyFileds(Class<?> clazz, Object instance) {
+		for (Field field : clazz.getDeclaredFields()) {
+			// find field with attribute or element annotation
+			String name = null;
+			XmlElement element = field.getAnnotation(XmlElement.class);
+			if (element != null) {
+				name = element.name();
+			} else {
+				XmlAttribute attribute = field
+						.getAnnotation(XmlAttribute.class);
+				if (attribute != null) {
+					name = attribute.name();
+				} else {
+					continue;
+				}
 			}
-		} catch (IOException e) {
-			log.error("properties \"" + configFileName + "\" couldn't be load",
-					e);
+			// set unmarshalled value to this instance
+			field.setAccessible(true);
+			try {
+				field.set(this, field.get(instance));
+				log.info("property {} assigned with value {}", name,
+						field.get(instance));
+
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				log.error(e.getMessage(), e);
+			}
+			field.setAccessible(false);
 		}
-
-		scheme = props.getProperty("scheme");
-		log.debug("loaded property \"scheme\" is: " + scheme);
-
-		host = props.getProperty("url");
-		log.debug("loaded property \"url\" is: " + host);
-
-		listPath = props.getProperty("list.path");
-		log.debug("loaded property \"list.path\" is: " + listPath);
-
-		itemPath = props.getProperty("item.path");
-		log.debug("loaded property \"item.path\" is: " + listPath);
-
-		favoriteFilter = props.getProperty("favorite.filter");
-		log.debug("loaded property \"favorite\" is: " + favoriteFilter);
-
-		timeout = Integer.parseInt(props.getProperty("timeout"));
-		log.debug("loaded property \"timeout\" is: " + timeout);
-
-		pageDepth = Integer.parseInt(props.getProperty("pages.depth"));
-		log.debug("loaded property \"pages.depth\" is: " + pageDepth);
-
-		userAgent = props.getProperty("user.agent");
-		log.debug("loaded property \"user.agent\" is: " + userAgent);
-
-		rowSelector = props.getProperty("row.selector");
-		log.debug("loaded property \"row.selector\" is: " + rowSelector);
-
-		idParamName = props.getProperty("id.pattern");
-		log.debug("loaded property \"id.pattern\" is: " + idParamName);
-
-		titleSelector = props.getProperty("title.selector");
-		log.debug("loaded property \"title.selector\" is: " + titleSelector);
-
-		descriptionSelector = props.getProperty("description.selector");
-		log.debug("loaded property \"description.selector\" is: "
-				+ descriptionSelector);
-
-		priceSelector = props.getProperty("price.selector");
-		log.debug("loaded property \"price.selector\" is: " + priceSelector);
-
-		dateSelector = props.getProperty("date.selector");
-		log.debug("loaded property \"date.selector\" is: " + dateSelector);
-
-		imagesSelector = props.getProperty("images.selector");
-		log.debug("loaded property \"images.selector\" is: " + imagesSelector);
 	}
 
 	@Override
@@ -375,5 +332,66 @@ public abstract class AbstractAdvertParser implements AdvertParser {
 
 	public void setService(AdvertService service) {
 		this.service = service;
+	}
+
+	@SuppressWarnings("unused")
+	private void loadProperties() {
+		Properties props = new Properties();
+		try {
+			InputStream in = getClass().getResourceAsStream(configFileName);
+			if (in != null) {
+				props.load(in);
+				in.close();
+			}
+		} catch (IOException e) {
+			log.error("properties \"" + configFileName + "\" couldn't be load",
+					e);
+		}
+
+		scheme = props.getProperty("scheme");
+		log.debug("loaded property \"scheme\" is: " + scheme);
+
+		host = props.getProperty("url");
+		log.debug("loaded property \"url\" is: " + host);
+
+		listPath = props.getProperty("list.path");
+		log.debug("loaded property \"list.path\" is: " + listPath);
+
+		itemPath = props.getProperty("item.path");
+		log.debug("loaded property \"item.path\" is: " + listPath);
+
+		favoriteFilter = props.getProperty("favorite.filter");
+		log.debug("loaded property \"favorite\" is: " + favoriteFilter);
+
+		timeout = Integer.parseInt(props.getProperty("timeout"));
+		log.debug("loaded property \"timeout\" is: " + timeout);
+
+		pageDepth = Integer.parseInt(props.getProperty("pages.depth"));
+		log.debug("loaded property \"pages.depth\" is: " + pageDepth);
+
+		userAgent = props.getProperty("user.agent");
+		log.debug("loaded property \"user.agent\" is: " + userAgent);
+
+		rowSelector = props.getProperty("row.selector");
+		log.debug("loaded property \"row.selector\" is: " + rowSelector);
+
+		idParamName = props.getProperty("id.pattern");
+		log.debug("loaded property \"id.pattern\" is: " + idParamName);
+
+		titleSelector = props.getProperty("title.selector");
+		log.debug("loaded property \"title.selector\" is: " + titleSelector);
+
+		descriptionSelector = props.getProperty("description.selector");
+		log.debug("loaded property \"description.selector\" is: "
+				+ descriptionSelector);
+
+		priceSelector = props.getProperty("price.selector");
+		log.debug("loaded property \"price.selector\" is: " + priceSelector);
+
+		dateSelector = props.getProperty("date.selector");
+		log.debug("loaded property \"date.selector\" is: " + dateSelector);
+
+		imagesSelector = props.getProperty("images.selector");
+		log.debug("loaded property \"images.selector\" is: " + imagesSelector);
 	}
 }
