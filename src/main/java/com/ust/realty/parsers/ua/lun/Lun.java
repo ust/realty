@@ -1,4 +1,4 @@
-package com.ust.parsers.ua.lun;
+package com.ust.realty.parsers.ua.lun;
 
 import java.io.IOException;
 
@@ -8,8 +8,8 @@ import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ust.model.Phone;
-import com.ust.parsers.AbstractAdvertParser;
+import com.ust.realty.model.Phone;
+import com.ust.realty.parsers.AbstractAdvertParser;
 
 public class Lun {
 	private static Logger log = LoggerFactory.getLogger(AbstractAdvertParser.class);
